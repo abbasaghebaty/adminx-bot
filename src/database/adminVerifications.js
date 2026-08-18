@@ -6,10 +6,9 @@
  *
  * مسئول:
  * - ثبت درخواست ایجاد کد
- * - بررسی وضعیت درخواست
- * - تأیید درخواست
- * - رد درخواست
- * - استعلام معتبر بودن ادمین
+ * - تأیید / رد درخواست
+ * - استعلام Username
+ * - استعلام Telegram ID از پیام Forward
  */
 
 /**
@@ -17,11 +16,10 @@
  *
  * @Amozesh_adminx
  * Amozesh_adminx
- * @amozesh_adminx
  *
- * همگی به شکل:
+ * هر دو تبدیل می‌شوند به:
+ *
  * amozesh_adminx
- * تبدیل می‌شوند.
  */
 export function normalizeUsername(username) {
   if (!username) {
@@ -35,7 +33,7 @@ export function normalizeUsername(username) {
 }
 
 /**
- * پیدا کردن کاربر داخلی از روی Telegram ID
+ * پیدا کردن کاربر داخلی از Telegram ID
  */
 export async function getUserByTelegramId(db, telegramId) {
   if (!telegramId) {
@@ -44,7 +42,12 @@ export async function getUserByTelegramId(db, telegramId) {
 
   return await db
     .prepare(`
-      SELECT id, telegram_id, username, first_name, last_name
+      SELECT
+        id,
+        telegram_id,
+        username,
+        first_name,
+        last_name
       FROM users
       WHERE telegram_id = ?
       LIMIT 1
@@ -54,7 +57,7 @@ export async function getUserByTelegramId(db, telegramId) {
 }
 
 /**
- * ایجاد درخواست جدید برای ادمین شدن
+ * ایجاد درخواست جدید برای تأیید ادمین
  */
 export async function createAdminVerification(
   db,
@@ -67,7 +70,7 @@ export async function createAdminVerification(
     throw new Error('Admin username is required');
   }
 
-  const result = await db
+  return await db
     .prepare(`
       INSERT INTO admin_verifications (
         user_id,
@@ -81,12 +84,10 @@ export async function createAdminVerification(
       normalizedUsername
     )
     .run();
-
-  return result;
 }
 
 /**
- * بررسی درخواست‌های قبلی یک کاربر
+ * آخرین درخواست کاربر
  */
 export async function getUserAdminVerification(db, userId) {
   return await db
@@ -104,7 +105,10 @@ export async function getUserAdminVerification(db, userId) {
 /**
  * پیدا کردن درخواست بر اساس ID
  */
-export async function getAdminVerificationById(db, verificationId) {
+export async function getAdminVerificationById(
+  db,
+  verificationId
+) {
   return await db
     .prepare(`
       SELECT
@@ -124,14 +128,14 @@ export async function getAdminVerificationById(db, verificationId) {
 }
 
 /**
- * تأیید درخواست توسط ادمین اصلی
+ * تأیید درخواست
  */
 export async function approveAdminVerification(
   db,
   verificationId,
   reviewerUserId
 ) {
-  const result = await db
+  return await db
     .prepare(`
       UPDATE admin_verifications
       SET
@@ -146,19 +150,17 @@ export async function approveAdminVerification(
       verificationId
     )
     .run();
-
-  return result;
 }
 
 /**
- * رد درخواست توسط ادمین اصلی
+ * رد درخواست
  */
 export async function rejectAdminVerification(
   db,
   verificationId,
   reviewerUserId
 ) {
-  const result = await db
+  return await db
     .prepare(`
       UPDATE admin_verifications
       SET
@@ -173,16 +175,15 @@ export async function rejectAdminVerification(
       verificationId
     )
     .run();
-
-  return result;
 }
 
 /**
- * استعلام معتبر بودن ادمین
- *
- * کاربر می‌تواند با یا بدون @ وارد کند.
+ * استعلام با Username
  */
-export async function checkAdminValidity(db, adminUsername) {
+export async function checkAdminValidity(
+  db,
+  adminUsername
+) {
   const normalizedUsername = normalizeUsername(adminUsername);
 
   if (!normalizedUsername) {
@@ -208,5 +209,40 @@ export async function checkAdminValidity(db, adminUsername) {
       LIMIT 1
     `)
     .bind(normalizedUsername)
+    .first();
+}
+
+/**
+ * استعلام با Telegram ID
+ *
+ * این قسمت برای پیام‌های Forward شده استفاده می‌شود.
+ */
+export async function checkAdminValidityByTelegramId(
+  db,
+  telegramId
+) {
+  if (!telegramId) {
+    return null;
+  }
+
+  return await db
+    .prepare(`
+      SELECT
+        av.id,
+        av.admin_username,
+        av.status,
+        u.telegram_id,
+        u.username,
+        u.first_name,
+        u.last_name
+      FROM admin_verifications av
+      INNER JOIN users u
+        ON u.id = av.user_id
+      WHERE u.telegram_id = ?
+      AND av.status = 'approved'
+      ORDER BY av.id DESC
+      LIMIT 1
+    `)
+    .bind(telegramId)
     .first();
 }
