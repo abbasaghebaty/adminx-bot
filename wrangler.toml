@@ -2,11 +2,6 @@ name = "adminx-bot"
 main = "src/index.js"
 compatibility_date = "2024-09-01"
 
-# متغیرهای عمومی (غیر محرمانه)
-[vars]
-ADMIN_ID = "7548075013" 
-
-
 # دیتابیس D1
 [[d1_databases]]
 binding = "DB"                      # در کد با env.DB صدا زده می‌شود
