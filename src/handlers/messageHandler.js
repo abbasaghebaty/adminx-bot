@@ -4,14 +4,26 @@
  * مسیر:
  * src/handlers/messageHandler.js
  *
- * این فایل پیام‌های عادی و کلیک‌های دکمه را پردازش می‌کند.
+ * مسئول پردازش:
+ * - پیام‌های عادی
+ * - دکمه‌های منوی اصلی
+ * - منوی خرید دوره
+ * - منوی کسب درآمد
  */
 
 import { sendMessage } from '../api/telegram.js';
+
 import {
   MAIN_MENU_BUTTONS,
   getMainMenuKeyboard,
 } from '../../keyboards/mainMenu.js';
+
+import {
+  COURSE_MENU_BUTTONS,
+  getCourseMenuKeyboard,
+} from '../../keyboards/courseMenu.js';
+
+import { isFriday } from '../utils/date.js';
 
 export async function handleMessage(message, env, db) {
   try {
@@ -31,45 +43,144 @@ export async function handleMessage(message, env, db) {
 
     console.log(`💬 Handling message: "${text}"`);
 
-    // ✅ اینجا await استفاده میکنیم
     switch (text) {
+
+      // =====================================================
+      // 🛍 خرید دوره
+      // =====================================================
+
       case MAIN_MENU_BUTTONS.BUY_COURSE:
         return await sendMessage(
           botToken,
           chatId,
-          '🛒 <b>دوره‌های موجود برای خرید:</b>\n\n<i>(بزودی)</i>',
+          `🛍 <b>خرید دوره AdminX</b>
+
+برای ادامه یکی از گزینه‌های زیر را انتخاب کنید:
+
+💳 دریافت شماره کارت
+🔎 استعلام ادمین`,
+          getCourseMenuKeyboard(),
         );
 
-      case MAIN_MENU_BUTTONS.MY_COURSES:
+
+      // =====================================================
+      // 💳 دریافت شماره کارت
+      // =====================================================
+
+      case COURSE_MENU_BUTTONS.GET_CARD:
+
+        // جمعه تعطیل است
+        if (isFriday()) {
+          return await sendMessage(
+            botToken,
+            chatId,
+            `📅 <b>دریافت شماره کارت فعلاً فعال نیست.</b>
+
+امروز جمعه است.
+
+ان‌شاءالله از <b>شنبه</b> می‌توانید برای دریافت شماره کارت و ثبت‌نام دوره اقدام کنید.`,
+            getCourseMenuKeyboard(),
+          );
+        }
+
+        // فعلاً شماره کارت را اینجا قرار می‌دهیم
         return await sendMessage(
           botToken,
           chatId,
-          '📚 <b>دوره‌های شما:</b>\n\n<i>(بزودی)</i>',
+          `💳 <b>شماره کارت جهت ثبت‌نام دوره</b>
+
+نام صاحب حساب:
+<b>نام صاحب کارت</b>
+
+شماره کارت:
+<b>0000-0000-0000-0000</b>
+
+💰 مبلغ دوره:
+<b>۲۰۰,۰۰۰ تومان</b>
+
+بعد از واریز، رسید پرداخت خود را برای ادامه مراحل ارسال کنید.`,
+          getCourseMenuKeyboard(),
         );
+
+
+      // =====================================================
+      // 🔎 استعلام ادمین
+      // =====================================================
+
+      case COURSE_MENU_BUTTONS.VERIFY_ADMIN:
+        return await sendMessage(
+          botToken,
+          chatId,
+          `🔎 <b>استعلام ادمین AdminX</b>
+
+لطفاً آیدی ادمین موردنظر را ارسال کنید.
+
+مثال:
+
+<code>@Amozesh_adminx</code>
+
+یا بدون @:
+
+<code>Amozesh_adminx</code>
+
+سپس بررسی می‌کنیم که آیا این ادمین توسط AdminX تأیید شده است یا خیر.`,
+          getCourseMenuKeyboard(),
+        );
+
+
+      // =====================================================
+      // 🔙 بازگشت
+      // =====================================================
+
+      case COURSE_MENU_BUTTONS.BACK:
+        return await sendMessage(
+          botToken,
+          chatId,
+          `🏠 <b>منوی اصلی</b>
+
+گزینه موردنظر خود را انتخاب کنید:`,
+          getMainMenuKeyboard(),
+        );
+
+
+      // =====================================================
+      // 💰 کسب درآمد
+      // =====================================================
 
       case MAIN_MENU_BUTTONS.EARN_MONEY:
         return await sendMessage(
           botToken,
           chatId,
-          '💰 <b>برنامه کسب درآمد:</b>\n\n<i>(بزودی)</i>',
+          `💰 <b>کسب درآمد با AdminX</b>
+
+برای ورود به بخش کسب درآمد، ابتدا باید شرایط لازم را داشته باشید.
+
+این بخش به‌زودی تکمیل می‌شود.`,
         );
 
-      case MAIN_MENU_BUTTONS.ACCOUNT:
-        return await sendMessage(
-          botToken,
-          chatId,
-          '👤 <b>حساب کاربری:</b>\n\n<i>(بزودی)</i>',
-        );
+
+      // =====================================================
+      // ❓ پشتیبانی
+      // =====================================================
 
       case MAIN_MENU_BUTTONS.SUPPORT:
         return await sendMessage(
           botToken,
           chatId,
-          '❓ <b>راهنما و پشتیبانی:</b>\n\n<i>(بزودی)</i>',
+          `❓ <b>راهنما و پشتیبانی</b>
+
+در صورت داشتن هرگونه سؤال می‌توانید با پشتیبانی AdminX در ارتباط باشید.`,
+          getMainMenuKeyboard(),
         );
+
+
+      // =====================================================
+      // پیام ناشناخته
+      // =====================================================
 
       default:
         console.log(`⚠️ Unknown message: "${text}"`);
+
         return await sendMessage(
           botToken,
           chatId,
@@ -77,12 +188,18 @@ export async function handleMessage(message, env, db) {
           getMainMenuKeyboard(),
         );
     }
+
   } catch (error) {
-    console.error('❌ Error in handleMessage:', error.message, error.stack);
-    // ✅ اگر خطا بیفتد، سعی میکنیم پیام خطا بفرستیم
+    console.error(
+      '❌ Error in handleMessage:',
+      error.message,
+      error.stack
+    );
+
     try {
       const chatId = message?.chat?.id;
       const botToken = env?.TELEGRAM_BOT_TOKEN;
+
       if (chatId && botToken) {
         await sendMessage(
           botToken,
@@ -91,7 +208,10 @@ export async function handleMessage(message, env, db) {
         );
       }
     } catch (err) {
-      console.error('Failed to send error message:', err.message);
+      console.error(
+        'Failed to send error message:',
+        err.message
+      );
     }
   }
 }
