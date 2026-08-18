@@ -121,25 +121,20 @@ case COURSE_MENU_BUTTONS.GET_CARD:
       // 🔎 استعلام ادمین
       // =====================================================
 
-      case COURSE_MENU_BUTTONS.VERIFY_ADMIN:
-        return await sendMessage(
-          botToken,
-          chatId,
-          `🔎 <b>استعلام ادمین AdminX</b>
+     case COURSE_MENU_BUTTONS.VERIFY_ADMIN:
+  return await sendMessage(
+    botToken,
+    chatId,
+    `🔎 <b>استعلام معتبر بودن ادمین</b>
 
-لطفاً آیدی ادمین موردنظر را ارسال کنید.
+جهت استعلام معتبر بودن ادمین، یکی از موارد زیر را ارسال کنید:
 
-مثال:
+• آیدی ادمین
+• یا یک پیام از طرف همان ادمین را برای ربات ارسال کنید.
 
-<code>@Amozesh_adminx</code>
-
-یا بدون @:
-
-<code>Amozesh_adminx</code>
-
-سپس بررسی می‌کنیم که آیا این ادمین توسط AdminX تأیید شده است یا خیر.`,
-          getCourseMenuKeyboard(),
-        );
+سیستم پس از دریافت اطلاعات، معتبر بودن ادمین را بررسی می‌کند.`,
+    getCourseMenuKeyboard(),
+  );
 
 
       // =====================================================
