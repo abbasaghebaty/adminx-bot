@@ -1,16 +1,17 @@
-name = "abbas-aghebaty-bot"
+name = "adminx-bot"
 main = "src/index.js"
 compatibility_date = "2024-09-01"
 
 # متغیرهای عمومی (غیر محرمانه)
 [vars]
-ADMIN_ID = "7548075013"   # آیدی عددی تلگرام عباس (ادمین) را اینجا بگذار
+ADMIN_ID = "7548075013" 
+
 
 # دیتابیس D1
 [[d1_databases]]
 binding = "DB"                      # در کد با env.DB صدا زده می‌شود
-database_name = "abbas-aghebaty-bot"
-database_id = "df9f5c73-eedb-4352-bde6-5b8aea6167e0"    # بعد از ساخت دیتابیس با wrangler اینجا جایگزین کن
+database_name = "adminx-bot"
+database_id = "a1e03897-023c-4893-96ad-0bed07be3fed"    # بعد از ساخت دیتابیس با wrangler اینجا جایگزین کن
 
 
 # نکته: BOT_TOKEN یک Secret است و اینجا نوشته نمی‌شود.
