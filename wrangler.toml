@@ -1,5 +1,5 @@
 # wrangler.toml
-name = 'sell-pack'
+name = 'adminx-bot'
 main = "src/index.js"
 compatibility_date = "2026-08-18"
 
@@ -8,8 +8,8 @@ ENVIRONMENT = "production"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "sell-pack"
-database_id = "2a89652a-61ca-4f50-a3ed-02a5e899aa73"
+database_name = "adminx-bot"
+database_id = "a1e03897-023c-4893-96ad-0bed07be3fed"
 
 [env.production]
 vars = { ENVIRONMENT = "production" }
