@@ -84,23 +84,37 @@ export async function handleMessage(message, env, db) {
         }
 
         // فعلاً شماره کارت را اینجا قرار می‌دهیم
-        return await sendMessage(
-          botToken,
-          chatId,
-          `💳 <b>شماره کارت جهت ثبت‌نام دوره</b>
+case COURSE_MENU_BUTTONS.GET_CARD:
 
-نام صاحب حساب:
-<b>نام صاحب کارت</b>
+  if (isFriday()) {
+    return await sendMessage(
+      botToken,
+      chatId,
+      `📅 <b>دریافت شماره کارت فعلاً فعال نیست.</b>
 
-شماره کارت:
-<b>0000-0000-0000-0000</b>
+امروز جمعه است.
+
+ان‌شاءالله از <b>شنبه</b> می‌توانید شماره کارت را دریافت کنید.`,
+      getCourseMenuKeyboard(),
+    );
+  }
+
+  return await sendMessage(
+    botToken,
+    chatId,
+    `💳 <b>اطلاعات پرداخت دوره AdminX</b>
 
 💰 مبلغ دوره:
 <b>۲۰۰,۰۰۰ تومان</b>
 
-بعد از واریز، رسید پرداخت خود را برای ادامه مراحل ارسال کنید.`,
-          getCourseMenuKeyboard(),
-        );
+💳 شماره کارت:
+<b>0000-0000-0000-0000</b>
+
+بعد از واریز، لطفاً <b>رسید پرداخت را برای ادمین مربوطه ارسال کنید.</b>
+
+⚠️ قبل از واریز، حتماً از بخش <b>🔎 استعلام ادمین</b> معتبر بودن ادمین را بررسی کنید.`,
+    getCourseMenuKeyboard(),
+  );
 
 
       // =====================================================
