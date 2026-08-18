@@ -153,7 +153,7 @@ async function handleAdminVerificationInput(
 👤 ادمین:
 <b>@${admin.admin_username}</b>
 
-می‌توانید با اطمینان بیشتری با این ادمین ادامه دهید.`,
+با اطمینان کامل می‌توانید با این ادمین همکاری کنید.`
           getCourseMenuKeyboard()
         );
       }
