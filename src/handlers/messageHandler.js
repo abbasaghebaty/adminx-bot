@@ -10,7 +10,14 @@
  * - استعلام ادمین
  * - پیام استعلام
  * - Forward استعلام
+ * - کسب درآمد
+ * - درخواست ثبت حساب ادمینی
  */
+
+import {
+  EARN_MONEY_BUTTONS,
+  getEarnMoneyKeyboard,
+} from '../../keyboards/earnMoney.js';
 
 import { sendMessage } from '../api/telegram.js';
 
@@ -39,8 +46,11 @@ import {
 
 
 /**
+ * =====================================================
  * استخراج Username از متن
+ * =====================================================
  */
+
 function extractUsername(text) {
   if (!text) {
     return null;
@@ -57,8 +67,11 @@ function extractUsername(text) {
 
 
 /**
+ * =====================================================
  * استخراج Telegram ID از متن
+ * =====================================================
  */
+
 function extractTelegramId(text) {
   if (!text) {
     return null;
@@ -75,8 +88,11 @@ function extractTelegramId(text) {
 
 
 /**
+ * =====================================================
  * نمایش منوی اصلی
+ * =====================================================
  */
+
 async function showMainMenu(
   message,
   env
@@ -95,8 +111,11 @@ async function showMainMenu(
 
 
 /**
+ * =====================================================
  * نمایش منوی خرید دوره
+ * =====================================================
  */
+
 async function showCourseMenu(
   message,
   env
@@ -117,8 +136,11 @@ async function showCourseMenu(
 
 
 /**
+ * =====================================================
  * شروع استعلام ادمین
+ * =====================================================
  */
+
 async function startAdminVerification(
   message,
   env,
@@ -147,8 +169,11 @@ async function startAdminVerification(
 
 
 /**
+ * =====================================================
  * پردازش ورودی استعلام ادمین
+ * =====================================================
  */
+
 async function handleAdminVerificationInput(
   message,
   env,
@@ -159,8 +184,31 @@ async function handleAdminVerificationInput(
 
 
   /**
-   * اگر دیتابیس در دسترس نباشد
+   * بازگشت
+   *
+   * اگر کاربر داخل استعلام باشد،
+   * از استعلام خارج می‌شود و به صفحه اصلی می‌رود.
    */
+
+  if (
+    message.text === COURSE_MENU_BUTTONS.BACK
+  ) {
+    await clearUserState(
+      db,
+      message.from.id
+    );
+
+    return await showMainMenu(
+      message,
+      env
+    );
+  }
+
+
+  /**
+   * بررسی وجود دیتابیس
+   */
+
   if (!db) {
     return await sendMessage(
       botToken,
@@ -187,9 +235,11 @@ async function handleAdminVerificationInput(
       JSON.stringify(origin)
     );
 
+
     /**
      * Telegram اطلاعات فرستنده اصلی را دارد
      */
+
     if (
       origin.type === 'user' &&
       origin.sender_user
@@ -208,12 +258,12 @@ async function handleAdminVerificationInput(
           originalUserId
         );
 
+
       /**
-       * مهم:
-       * State در اینجا پاک نمی‌شود.
+       * State عمداً پاک نمی‌شود.
        *
-       * کاربر همچنان داخل حالت استعلام می‌ماند
-       * تا زمانی که خودش دکمه بازگشت را بزند.
+       * کاربر همچنان داخل استعلام می‌ماند
+       * تا خودش دکمه بازگشت را بزند.
        */
 
       if (admin) {
@@ -246,8 +296,9 @@ async function handleAdminVerificationInput(
 
 
     /**
-     * اگر اطلاعات فرستنده اصلی در دسترس نبود
+     * اطلاعات فرستنده اصلی در دسترس نیست
      */
+
     return await sendMessage(
       botToken,
       chatId,
@@ -280,9 +331,6 @@ async function handleAdminVerificationInput(
         telegramId
       );
 
-    /**
-     * State همچنان فعال می‌ماند.
-     */
 
     if (admin) {
       return await sendMessage(
@@ -299,6 +347,7 @@ async function handleAdminVerificationInput(
         getAdminVerificationKeyboard()
       );
     }
+
 
     return await sendMessage(
       botToken,
@@ -332,9 +381,6 @@ async function handleAdminVerificationInput(
         username
       );
 
-    /**
-     * State همچنان فعال می‌ماند.
-     */
 
     if (admin) {
       return await sendMessage(
@@ -351,6 +397,7 @@ async function handleAdminVerificationInput(
         getAdminVerificationKeyboard()
       );
     }
+
 
     return await sendMessage(
       botToken,
@@ -385,12 +432,20 @@ async function handleAdminVerificationInput(
 
 
 /**
+ * =====================================================
  * Handler اصلی پیام
+ * =====================================================
  */
+
 export default async function handleMessage(
   message,
   env
 ) {
+
+  /**
+   * پیام نامعتبر
+   */
+
   if (
     !message ||
     !message.chat ||
@@ -399,18 +454,28 @@ export default async function handleMessage(
     return;
   }
 
-  const db = env.DB;
-  const botToken = env.TELEGRAM_BOT_TOKEN;
-  const chatId = message.chat.id;
-  const userId = message.from.id;
-  const text = message.text;
+
+  const db =
+    env.DB;
+
+  const botToken =
+    env.TELEGRAM_BOT_TOKEN;
+
+  const chatId =
+    message.chat.id;
+
+  const userId =
+    message.from.id;
+
+  const text =
+    message.text;
 
 
   /**
    * =====================================================
    * /start
    *
-   * هر بار State قبلی پاک می‌شود.
+   * State قبلی کاملاً پاک می‌شود.
    * =====================================================
    */
 
@@ -418,6 +483,7 @@ export default async function handleMessage(
     text === '/start' ||
     text?.startsWith('/start ')
   ) {
+
     await clearUserState(
       db,
       userId
@@ -450,10 +516,8 @@ export default async function handleMessage(
    * =====================================================
    * بازگشت
    *
-   * بازگشت همیشه قبل از هر جستجویی بررسی می‌شود.
-   *
-   * استعلام ادمین → صفحه اصلی
-   * خرید دوره → صفحه اصلی
+   * هر جایی که دکمه بازگشت وجود دارد،
+   * فعلاً کاربر را به صفحه اصلی می‌فرستیم.
    * =====================================================
    */
 
@@ -475,16 +539,10 @@ export default async function handleMessage(
 
   /**
    * =====================================================
-   * اگر کاربر در حالت استعلام ادمین است
+   * حالت استعلام ادمین
    *
-   * فقط در این حالت پیام به عنوان:
-   * - ID
-   * - Username
-   * - Forward
-   * بررسی می‌شود.
-   *
-   * State تا زمانی که کاربر بازگشت نزند
-   * باقی می‌ماند.
+   * تا زمانی که بازگشت نزده،
+   * پیام‌ها فقط برای استعلام بررسی می‌شوند.
    * =====================================================
    */
 
@@ -492,6 +550,7 @@ export default async function handleMessage(
     currentState ===
     USER_STATES.WAITING_FOR_ADMIN_VERIFICATION
   ) {
+
     return await handleAdminVerificationInput(
       message,
       env,
@@ -502,7 +561,7 @@ export default async function handleMessage(
 
   /**
    * =====================================================
-   * دکمه خرید دوره
+   * خرید دوره
    * =====================================================
    */
 
@@ -510,6 +569,7 @@ export default async function handleMessage(
     text ===
     MAIN_MENU_BUTTONS.BUY_COURSE
   ) {
+
     return await showCourseMenu(
       message,
       env
@@ -527,6 +587,7 @@ export default async function handleMessage(
     text ===
     COURSE_MENU_BUTTONS.VERIFY_ADMIN
   ) {
+
     return await startAdminVerification(
       message,
       env,
@@ -541,91 +602,82 @@ export default async function handleMessage(
    * =====================================================
    */
 
-if (
-  text ===
-  MAIN_MENU_BUTTONS.EARN_MONEY
-) {
-  return await sendMessage(
-    botToken,
-    chatId,
-    `💰 <b>کسب درآمد با AdminX</b>
+  if (
+    text ===
+    MAIN_MENU_BUTTONS.EARN_MONEY
+  ) {
+
+    return await sendMessage(
+      botToken,
+      chatId,
+      `💰 <b>کسب درآمد با AdminX</b>
 
 اگر قصد دارید به عنوان ادمین با AdminX همکاری کنید، می‌توانید درخواست ثبت حساب ادمینی خود را ارسال کنید.
 
-پس از ارسال درخواست، اطلاعات شما توسط تیم AdminX بررسی می‌شود و در صورت تأیید، حساب ادمینی شما در سیستم ثبت خواهد شد.
+قبل از ثبت درخواست توجه داشته باشید که برای ارسال درخواست، ابتدا باید دوره را خریداری کرده باشید.
 
-برای ثبت درخواست، از گزینه زیر استفاده کنید.`,
-    getEarnMoneyKeyboard()
-  );
-}
+پس از ارسال درخواست، اطلاعات شما توسط تیم AdminX بررسی می‌شود و در صورت تأیید، حساب ادمینی شما در سیستم AdminX ثبت خواهد شد.
 
-
-  /**
-   * =====================================================
-   * راهنما و پشتیبانی
-   * =====================================================
-   */
-
-  if (
-    text ===
-    MAIN_MENU_BUTTONS.SUPPORT
-  ) {
-    return await sendMessage(
-      botToken,
-      chatId,
-      `❓ <b>راهنما و پشتیبانی</b>
-
-در صورت نیاز به راهنمایی، از طریق پشتیبانی AdminX اقدام کنید.`,
-      getMainMenuKeyboard()
+برای شروع فرآیند ثبت درخواست، گزینه زیر را انتخاب کنید.`,
+      getEarnMoneyKeyboard()
     );
   }
 
 
   /**
    * =====================================================
-   * پیام ناشناخته
-   * =====================================================
-   */
-
-  return await sendMessage(
-    botToken,
-    chatId,
-    'لطفاً یکی از گزینه‌های موجود در منو را انتخاب کنید.',
-    getMainMenuKeyboard()
-  );
-}      getMainMenuKeyboard()
-    );
-  }
-
-
-  /**
-   * =====================================================
-   * راهنما و پشتیبانی
-   * =====================================================
-   */
-
-  if (
-    text ===
-    MAIN_MENU_BUTTONS.SUPPORT
-  ) {
-    return await sendMessage(
-      botToken,
-      chatId,
-      `❓ <b>راهنما و پشتیبانی</b>
-
-در صورت نیاز به راهنمایی، از طریق پشتیبانی AdminX اقدام کنید.`,
-      getMainMenuKeyboard()
-    );
-  }
-
-
-  /**
-   * =====================================================
-   * پیام ناشناخته
+   * درخواست ثبت حساب ادمینی
    *
-   * مهم:
-   * دیگر هیچ پیام عادی به عنوان استعلام
-   * ادمین پردازش نمی‌شود.
+   * فعلاً فقط نقطه ورود است.
+   * منطق اصلی بعداً در فایل جداگانه قرار می‌گیرد.
+   * =====================================================
+   */
+
+  if (
+    text ===
+    EARN_MONEY_BUTTONS.APPLY_ADMIN
+  ) {
+
+    return await sendMessage(
+      botToken,
+      chatId,
+      `📝 <b>ثبت درخواست حساب ادمینی</b>
+
+برای ثبت درخواست همکاری با AdminX، ابتدا باید دوره را خریداری کرده باشید.
+
+پس از اطمینان از خرید دوره، می‌توانید فرآیند ثبت درخواست را شروع کنید.
+
+⚠️ اطلاعاتی که در مراحل بعدی وارد می‌کنید باید کاملاً واقعی و متعلق به خودتان باشد. اطلاعات نادرست می‌تواند باعث رد شدن درخواست شود.`,
+      getEarnMoneyKeyboard()
+    );
+  }
+
+
+  /**
+   * =====================================================
+   * راهنما و پشتیبانی
+   * =====================================================
+   */
+
+  if (
+    text ===
+    MAIN_MENU_BUTTONS.SUPPORT
+  ) {
+
+    return await sendMessage(
+      botToken,
+      chatId,
+      `❓ <b>راهنما و پشتیبانی</b>
+
+در صورت نیاز به راهنمایی، از طریق پشتیبانی AdminX اقدام کنید.`,
+      getMainMenuKeyboard()
+    );
+  }
+
+
+  /**
+   * =====================================================
+   * پیام ناشناخته
    * =====================================================
    */
 
