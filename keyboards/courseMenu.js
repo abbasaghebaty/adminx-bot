@@ -8,24 +8,17 @@
  */
 
 export const COURSE_MENU_BUTTONS = Object.freeze({
-  GET_CARD: '💳 دریافت شماره کارت',
   VERIFY_ADMIN: '🔎 استعلام ادمین',
   BACK: '🔙 بازگشت',
 });
 
+
 /**
- * منوی اصلی خرید دوره
+ * منوی خرید دوره
  */
 export function getCourseMenuKeyboard() {
   return {
     keyboard: [
-      [
-        {
-          text: COURSE_MENU_BUTTONS.GET_CARD,
-          style: 'primary',
-        },
-      ],
-
       [
         {
           text: COURSE_MENU_BUTTONS.VERIFY_ADMIN,
@@ -45,6 +38,7 @@ export function getCourseMenuKeyboard() {
     is_persistent: false,
   };
 }
+
 
 /**
  * منوی مخصوص زمان استعلام ادمین
