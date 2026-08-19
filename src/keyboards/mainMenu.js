@@ -39,6 +39,5 @@ export function getMainMenuKeyboard() {
       ],
     ],
     resize_keyboard: true,
-    is_persistent: true,
   };
 }
