@@ -9,36 +9,19 @@
 
 export const USER_STATES = Object.freeze({
 
-  /**
-   * استعلام ادمین
-   */
+  // استعلام ادمین
   WAITING_FOR_ADMIN_VERIFICATION:
     'waiting_for_admin_verification',
 
-
-  /**
-   * درخواست ثبت حساب ادمینی
-   *
-   * منتظر تأیید خرید دوره
-   */
+  // کاربر درخواست ثبت حساب ادمینی را زده
   WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION:
     'waiting_for_admin_application_confirmation',
 
-
-  /**
-   * درخواست ثبت حساب ادمینی
-   *
-   * منتظر نام و نام خانوادگی
-   */
+  // کاربر تأیید کرده که دوره را خریده
   WAITING_FOR_ADMIN_APPLICATION_NAME:
     'waiting_for_admin_application_name',
 
-
-  /**
-   * درخواست ثبت حساب ادمینی
-   *
-   * منتظر شماره تلفن
-   */
+  // دریافت شماره تلفن
   WAITING_FOR_ADMIN_APPLICATION_PHONE:
     'waiting_for_admin_application_phone',
 
@@ -46,35 +29,24 @@ export const USER_STATES = Object.freeze({
 
 
 /**
- * =====================================================
  * ذخیره یا تغییر State کاربر
- * =====================================================
  */
-
 export async function setUserState(
   db,
   userId,
   state
 ) {
-
   if (!db) {
-    throw new Error(
-      'Database is not available'
-    );
+    throw new Error('Database is not available');
   }
 
   if (!userId) {
-    throw new Error(
-      'User ID is required'
-    );
+    throw new Error('User ID is required');
   }
 
   if (!state) {
-    throw new Error(
-      'State is required'
-    );
+    throw new Error('State is required');
   }
-
 
   await db
     .prepare(`
@@ -98,23 +70,15 @@ export async function setUserState(
 
 
 /**
- * =====================================================
  * دریافت State کاربر
- * =====================================================
  */
-
 export async function getUserState(
   db,
   userId
 ) {
-
-  if (
-    !db ||
-    !userId
-  ) {
+  if (!db || !userId) {
     return null;
   }
-
 
   return await db
     .prepare(`
@@ -124,47 +88,31 @@ export async function getUserState(
         state,
         created_at,
         updated_at
-
       FROM user_states
-
       WHERE user_id = ?
-
       LIMIT 1
     `)
-    .bind(
-      userId
-    )
+    .bind(userId)
     .first();
 }
 
 
 /**
- * =====================================================
  * حذف State کاربر
- * =====================================================
  */
-
 export async function clearUserState(
   db,
   userId
 ) {
-
-  if (
-    !db ||
-    !userId
-  ) {
+  if (!db || !userId) {
     return;
   }
-
 
   await db
     .prepare(`
       DELETE FROM user_states
-
       WHERE user_id = ?
     `)
-    .bind(
-      userId
-    )
+    .bind(userId)
     .run();
 }
