@@ -6,16 +6,9 @@
  */
 
 export const EARN_MONEY_BUTTONS = Object.freeze({
-
-  APPLY_ADMIN:
-    '📝 درخواست ثبت حساب ادمینی',
-
-  PURCHASED_COURSE:
-    '✅ دوره را خریداری کرده‌ام',
-
-  BACK:
-    '🔙 بازگشت',
-
+  APPLY_ADMIN: '📝 درخواست ثبت حساب ادمینی',
+  COURSE_PURCHASED: '✅ دوره را خریداری کرده‌ام',
+  BACK: '🔙 بازگشت',
 });
 
 
@@ -27,14 +20,14 @@ export function getEarnMoneyKeyboard() {
     keyboard: [
       [
         {
-          text:
-            EARN_MONEY_BUTTONS.APPLY_ADMIN,
+          text: EARN_MONEY_BUTTONS.APPLY_ADMIN,
+          style: 'primary',
         },
       ],
       [
         {
-          text:
-            EARN_MONEY_BUTTONS.BACK,
+          text: EARN_MONEY_BUTTONS.BACK,
+          style: 'danger',
         },
       ],
     ],
@@ -44,21 +37,21 @@ export function getEarnMoneyKeyboard() {
 
 
 /**
- * کیبورد تأیید خرید دوره
+ * بعد از زدن درخواست ثبت حساب
  */
 export function getAdminApplicationStartKeyboard() {
   return {
     keyboard: [
       [
         {
-          text:
-            EARN_MONEY_BUTTONS.PURCHASED_COURSE,
+          text: EARN_MONEY_BUTTONS.COURSE_PURCHASED,
+          style: 'primary',
         },
       ],
       [
         {
-          text:
-            EARN_MONEY_BUTTONS.BACK,
+          text: EARN_MONEY_BUTTONS.BACK,
+          style: 'danger',
         },
       ],
     ],
@@ -68,15 +61,39 @@ export function getAdminApplicationStartKeyboard() {
 
 
 /**
- * کیبورد فقط بازگشت
+ * مرحله دریافت نام و نام خانوادگی
  */
 export function getAdminApplicationBackKeyboard() {
   return {
     keyboard: [
       [
         {
-          text:
-            EARN_MONEY_BUTTONS.BACK,
+          text: EARN_MONEY_BUTTONS.BACK,
+          style: 'danger',
+        },
+      ],
+    ],
+    resize_keyboard: true,
+  };
+}
+
+
+/**
+ * مرحله دریافت شماره تلفن
+ */
+export function getAdminApplicationPhoneKeyboard() {
+  return {
+    keyboard: [
+      [
+        {
+          text: '📱 ارسال شماره همین حساب',
+          request_contact: true,
+        },
+      ],
+      [
+        {
+          text: EARN_MONEY_BUTTONS.BACK,
+          style: 'danger',
         },
       ],
     ],
