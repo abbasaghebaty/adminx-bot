@@ -159,23 +159,8 @@ async function handleAdminVerificationInput(
 
 
   /**
-   * بازگشت باید قبل از هر جستجویی بررسی شود.
+   * اگر دیتابیس در دسترس نباشد
    */
-  if (
-    message.text === COURSE_MENU_BUTTONS.BACK
-  ) {
-    await clearUserState(
-      db,
-      message.from.id
-    );
-
-    return await showCourseMenu(
-      message,
-      env
-    );
-  }
-
-
   if (!db) {
     return await sendMessage(
       botToken,
@@ -202,20 +187,36 @@ async function handleAdminVerificationInput(
       JSON.stringify(origin)
     );
 
+    /**
+     * Telegram اطلاعات فرستنده اصلی را دارد
+     */
     if (
       origin.type === 'user' &&
       origin.sender_user
     ) {
-const originalUserId =
-  origin.sender_user.id;
 
-const admin =
-  await checkAdminValidityByTelegramId(
-    db,
-    originalUserId
-  );
+      const originalUserId =
+        origin.sender_user.id;
 
-if (admin) {
+      console.log(
+        `🔎 Checking forwarded user ID: ${originalUserId}`
+      );
+
+      const admin =
+        await checkAdminValidityByTelegramId(
+          db,
+          originalUserId
+        );
+
+      /**
+       * مهم:
+       * State در اینجا پاک نمی‌شود.
+       *
+       * کاربر همچنان داخل حالت استعلام می‌ماند
+       * تا زمانی که خودش دکمه بازگشت را بزند.
+       */
+
+      if (admin) {
         return await sendMessage(
           botToken,
           chatId,
@@ -279,6 +280,10 @@ if (admin) {
         telegramId
       );
 
+    /**
+     * State همچنان فعال می‌ماند.
+     */
+
     if (admin) {
       return await sendMessage(
         botToken,
@@ -321,14 +326,17 @@ if (admin) {
       `🔎 Checking admin username: ${username}`
     );
 
-const admin =
-  await checkAdminValidity(
-    db,
-    username
-  );
+    const admin =
+      await checkAdminValidity(
+        db,
+        username
+      );
 
-if (admin) {
-  
+    /**
+     * State همچنان فعال می‌ماند.
+     */
+
+    if (admin) {
       return await sendMessage(
         botToken,
         chatId,
@@ -402,9 +410,7 @@ export default async function handleMessage(
    * =====================================================
    * /start
    *
-   * هر بار state قبلی پاک می‌شود.
-   * بنابراین ربات بعد از Start هیچ پیام عادی را
-   * به عنوان استعلام ادمین بررسی نمی‌کند.
+   * هر بار State قبلی پاک می‌شود.
    * =====================================================
    */
 
@@ -444,8 +450,10 @@ export default async function handleMessage(
    * =====================================================
    * بازگشت
    *
-   * اول از همه بررسی می‌شود تا هیچ‌وقت
-   * به عنوان username یا ID جستجو نشود.
+   * بازگشت همیشه قبل از هر جستجویی بررسی می‌شود.
+   *
+   * استعلام ادمین → صفحه اصلی
+   * خرید دوره → صفحه اصلی
    * =====================================================
    */
 
@@ -453,30 +461,11 @@ export default async function handleMessage(
     text === COURSE_MENU_BUTTONS.BACK
   ) {
 
-    /**
-     * استعلام ادمین
-     * → منوی خرید دوره
-     */
-    if (
-      currentState ===
-      USER_STATES.WAITING_FOR_ADMIN_VERIFICATION
-    ) {
-      await clearUserState(
-        db,
-        userId
-      );
+    await clearUserState(
+      db,
+      userId
+    );
 
-      return await showCourseMenu(
-        message,
-        env
-      );
-    }
-
-
-    /**
-     * منوی خرید دوره
-     * → منوی اصلی
-     */
     return await showMainMenu(
       message,
       env
@@ -488,8 +477,14 @@ export default async function handleMessage(
    * =====================================================
    * اگر کاربر در حالت استعلام ادمین است
    *
-   * فقط در این حالت پیام به عنوان
-   * ID / Username / Forward بررسی می‌شود.
+   * فقط در این حالت پیام به عنوان:
+   * - ID
+   * - Username
+   * - Forward
+   * بررسی می‌شود.
+   *
+   * State تا زمانی که کاربر بازگشت نزند
+   * باقی می‌ماند.
    * =====================================================
    */
 
@@ -557,6 +552,44 @@ export default async function handleMessage(
 
 از این بخش می‌توانید اطلاعات مربوط به کسب درآمد را مشاهده کنید.`,
       getMainMenuKeyboard()
+    );
+  }
+
+
+  /**
+   * =====================================================
+   * راهنما و پشتیبانی
+   * =====================================================
+   */
+
+  if (
+    text ===
+    MAIN_MENU_BUTTONS.SUPPORT
+  ) {
+    return await sendMessage(
+      botToken,
+      chatId,
+      `❓ <b>راهنما و پشتیبانی</b>
+
+در صورت نیاز به راهنمایی، از طریق پشتیبانی AdminX اقدام کنید.`,
+      getMainMenuKeyboard()
+    );
+  }
+
+
+  /**
+   * =====================================================
+   * پیام ناشناخته
+   * =====================================================
+   */
+
+  return await sendMessage(
+    botToken,
+    chatId,
+    'لطفاً یکی از گزینه‌های موجود در منو را انتخاب کنید.',
+    getMainMenuKeyboard()
+  );
+}      getMainMenuKeyboard()
     );
   }
 
