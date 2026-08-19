@@ -541,19 +541,23 @@ export default async function handleMessage(
    * =====================================================
    */
 
-  if (
-    text ===
-    MAIN_MENU_BUTTONS.EARN_MONEY
-  ) {
-    return await sendMessage(
-      botToken,
-      chatId,
-      `💰 <b>کسب درآمد</b>
+if (
+  text ===
+  MAIN_MENU_BUTTONS.EARN_MONEY
+) {
+  return await sendMessage(
+    botToken,
+    chatId,
+    `💰 <b>کسب درآمد با AdminX</b>
 
-از این بخش می‌توانید اطلاعات مربوط به کسب درآمد را مشاهده کنید.`,
-      getMainMenuKeyboard()
-    );
-  }
+اگر قصد دارید به عنوان ادمین با AdminX همکاری کنید، می‌توانید درخواست ثبت حساب ادمینی خود را ارسال کنید.
+
+پس از ارسال درخواست، اطلاعات شما توسط تیم AdminX بررسی می‌شود و در صورت تأیید، حساب ادمینی شما در سیستم ثبت خواهد شد.
+
+برای ثبت درخواست، از گزینه زیر استفاده کنید.`,
+    getEarnMoneyKeyboard()
+  );
+}
 
 
   /**
