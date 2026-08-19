@@ -738,38 +738,60 @@ if (
    * =====================================================
    */
 
+ if (
+  text ===
+  EARN_MONEY_BUTTONS.APPLY_ADMIN
+) {
+
+  await setUserState(
+    db,
+    userId,
+    USER_STATES.WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION
+  );
+
+  return await sendMessage(
+    botToken,
+    chatId,
+
+    `📝 <b>ثبت درخواست حساب ادمینی</b>
+
+برای ثبت درخواست همکاری با AdminX، ابتدا باید دوره را خریداری کرده باشید.
+
+پس از تأیید خرید دوره، اطلاعات لازم از شما دریافت می‌شود و درخواست برای بررسی تیم AdminX ارسال خواهد شد.
+
+⚠️ اطلاعاتی که در مراحل بعدی وارد می‌کنید باید کاملاً واقعی و متعلق به خودتان باشد. اطلاعات نادرست می‌تواند باعث رد شدن درخواست شود.
+
+اگر دوره را خریداری کرده‌اید، گزینه زیر را انتخاب کنید.`,
+
+    getAdminApplicationStartKeyboard()
+  );
+}
+
+/**
+ * =====================================================
+ * تأیید خرید دوره
+ * =====================================================
+ */
+
+if (
+  text ===
+  EARN_MONEY_BUTTONS.COURSE_PURCHASED
+) {
+
   if (
-    text ===
-    EARN_MONEY_BUTTONS.APPLY_ADMIN
+    currentState !==
+    USER_STATES.WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION
   ) {
-
-    await setUserState(
-      db,
-      userId,
-      USER_STATES.WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION
-    );
-
-
-    return await sendMessage(
-      botToken,
-      chatId,
-
-      `📝 <b>ثبت درخواست حساب ادمینی</b>
-
-برای ثبت درخواست همکاری با AdminX، ابتدا باید دوره آموزشی را خریداری کرده باشید.
-
-اگر دوره را خریداری کرده‌اید، گزینه زیر را انتخاب کنید تا فرآیند ثبت اطلاعات شما شروع شود.
-
-⚠️ <b>توجه:</b>
-اطلاعاتی که در مراحل بعدی وارد می‌کنید باید کاملاً واقعی و متعلق به خودتان باشد.
-
-در صورت وارد کردن اطلاعات نادرست یا غیرواقعی، ممکن است درخواست شما تأیید نشود.`,
-
-      getAdminApplicationStartKeyboard()
-    );
+    return;
   }
 
-
+  return await startAdminApplication(
+    message,
+    env,
+    db
+  );
+}
+  
   /**
    * =====================================================
    * تأیید خرید دوره و شروع فرم
