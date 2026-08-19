@@ -8,11 +8,10 @@
  * - منوی اصلی
  * - خرید دوره
  * - استعلام ادمین
- * - پیام استعلام
  * - Forward استعلام
  * - کسب درآمد
  * - درخواست ثبت حساب ادمینی
-*/
+ */
 
 import {
   startAdminApplication,
@@ -52,7 +51,38 @@ import {
 
 /**
  * =====================================================
- * استخراج Username از متن
+ * کیبورد شروع ثبت درخواست ادمینی
+ * =====================================================
+ *
+ * بعد از زدن «درخواست ثبت حساب ادمینی»
+ * این دکمه نمایش داده می‌شود.
+ *
+ * دکمه درخواست قبلی دیگر نمایش داده نمی‌شود.
+ */
+
+function getAdminApplicationStartKeyboard() {
+  return {
+    keyboard: [
+      [
+        {
+          text: '✅ دوره را خریداری کرده‌ام',
+        },
+      ],
+      [
+        {
+          text: COURSE_MENU_BUTTONS.BACK,
+        },
+      ],
+    ],
+    resize_keyboard: true,
+    one_time_keyboard: false,
+  };
+}
+
+
+/**
+ * =====================================================
+ * استخراج Username
  * =====================================================
  */
 
@@ -73,7 +103,7 @@ function extractUsername(text) {
 
 /**
  * =====================================================
- * استخراج Telegram ID از متن
+ * استخراج Telegram ID
  * =====================================================
  */
 
@@ -105,11 +135,13 @@ async function showMainMenu(
   return await sendMessage(
     env.TELEGRAM_BOT_TOKEN,
     message.chat.id,
+
     `سلام <b>${message.from.first_name || 'دوست عزیز'}</b>
 
 به <b>آکادمی AdminX</b> خوش آمدید.
 
 از منوی زیر گزینه موردنظر خود را انتخاب کنید.`,
+
     getMainMenuKeyboard()
   );
 }
@@ -128,6 +160,7 @@ async function showCourseMenu(
   return await sendMessage(
     env.TELEGRAM_BOT_TOKEN,
     message.chat.id,
+
     `🛍 <b>خرید دوره</b>
 
 قبل از هرگونه خرید یا پرداخت، ابتدا از معتبر بودن ادمینی که قصد همکاری با او را دارید مطمئن شوید.
@@ -135,6 +168,7 @@ async function showCourseMenu(
 برای جلوگیری از همکاری با ادمین‌های جعلی و افراد کلاهبردار، می‌توانید اطلاعات ادمین را از طریق سیستم AdminX استعلام بگیرید.
 
 🔎 از دکمه زیر برای استعلام ادمین استفاده کنید.`,
+
     getCourseMenuKeyboard()
   );
 }
@@ -160,14 +194,17 @@ async function startAdminVerification(
   return await sendMessage(
     env.TELEGRAM_BOT_TOKEN,
     message.chat.id,
+
     `🔎 <b>استعلام معتبر بودن ادمین</b>
 
 جهت استعلام معتبر بودن ادمین، یکی از موارد زیر را ارسال کنید:
 
 • آیدی ادمین
+• یوزرنیم ادمین
 • یا یک پیام از طرف همان ادمین را برای ربات ارسال کنید.
 
 سیستم پس از دریافت اطلاعات، معتبر بودن ادمین را بررسی می‌کند.`,
+
     getAdminVerificationKeyboard()
   );
 }
@@ -190,14 +227,12 @@ async function handleAdminVerificationInput(
 
   /**
    * بازگشت
-   *
-   * اگر کاربر داخل استعلام باشد،
-   * از استعلام خارج می‌شود و به صفحه اصلی می‌رود.
    */
 
   if (
     message.text === COURSE_MENU_BUTTONS.BACK
   ) {
+
     await clearUserState(
       db,
       message.from.id
@@ -211,14 +246,16 @@ async function handleAdminVerificationInput(
 
 
   /**
-   * بررسی وجود دیتابیس
+   * بررسی دیتابیس
    */
 
   if (!db) {
     return await sendMessage(
       botToken,
       chatId,
+
       '❌ در حال حاضر امکان استعلام وجود ندارد. لطفاً بعداً دوباره تلاش کنید.',
+
       getAdminVerificationKeyboard()
     );
   }
@@ -226,7 +263,7 @@ async function handleAdminVerificationInput(
 
   /**
    * =====================================================
-   * بررسی پیام Forward شده
+   * Forward
    * =====================================================
    */
 
@@ -241,10 +278,6 @@ async function handleAdminVerificationInput(
     );
 
 
-    /**
-     * Telegram اطلاعات فرستنده اصلی را دارد
-     */
-
     if (
       origin.type === 'user' &&
       origin.sender_user
@@ -257,6 +290,7 @@ async function handleAdminVerificationInput(
         `🔎 Checking forwarded user ID: ${originalUserId}`
       );
 
+
       const admin =
         await checkAdminValidityByTelegramId(
           db,
@@ -264,17 +298,12 @@ async function handleAdminVerificationInput(
         );
 
 
-      /**
-       * State عمداً پاک نمی‌شود.
-       *
-       * کاربر همچنان داخل استعلام می‌ماند
-       * تا خودش دکمه بازگشت را بزند.
-       */
-
       if (admin) {
+
         return await sendMessage(
           botToken,
           chatId,
+
           `✅ <b>ادمین معتبر است</b>
 
 این ادمین توسط AdminX تأیید شده است.
@@ -283,33 +312,35 @@ async function handleAdminVerificationInput(
 <b>@${admin.admin_username}</b>
 
 با اطمینان کامل می‌توانید با این ادمین همکاری کنید.`,
+
           getAdminVerificationKeyboard()
         );
       }
 
+
       return await sendMessage(
         botToken,
         chatId,
+
         `❌ <b>این ادمین در سیستم AdminX تأیید نشده است.</b>
 
 اطلاعات این ادمین در لیست ادمین‌های معتبر ما پیدا نشد.
 
 ⚠️ قبل از هرگونه پرداخت، حتماً از معتبر بودن ادمین اطمینان حاصل کنید.`,
+
         getAdminVerificationKeyboard()
       );
     }
 
 
-    /**
-     * اطلاعات فرستنده اصلی در دسترس نیست
-     */
-
     return await sendMessage(
       botToken,
       chatId,
+
       `⚠️ <b>امکان شناسایی فرستنده اصلی این پیام وجود ندارد.</b>
 
 لطفاً آیدی عددی یا یوزرنیم ادمین را به صورت مستقیم ارسال کنید.`,
+
       getAdminVerificationKeyboard()
     );
   }
@@ -317,7 +348,7 @@ async function handleAdminVerificationInput(
 
   /**
    * =====================================================
-   * بررسی Telegram ID
+   * Telegram ID
    * =====================================================
    */
 
@@ -330,6 +361,7 @@ async function handleAdminVerificationInput(
       `🔎 Checking admin Telegram ID: ${telegramId}`
     );
 
+
     const admin =
       await checkAdminValidityByTelegramId(
         db,
@@ -338,9 +370,11 @@ async function handleAdminVerificationInput(
 
 
     if (admin) {
+
       return await sendMessage(
         botToken,
         chatId,
+
         `✅ <b>ادمین معتبر است</b>
 
 این ادمین توسط AdminX تأیید شده است.
@@ -349,6 +383,7 @@ async function handleAdminVerificationInput(
 <b>@${admin.admin_username}</b>
 
 با اطمینان کامل می‌توانید با این ادمین همکاری کنید.`,
+
         getAdminVerificationKeyboard()
       );
     }
@@ -357,9 +392,11 @@ async function handleAdminVerificationInput(
     return await sendMessage(
       botToken,
       chatId,
+
       `❌ <b>این ادمین معتبر نیست</b>
 
 این آیدی در لیست ادمین‌های تأییدشده AdminX پیدا نشد.`,
+
       getAdminVerificationKeyboard()
     );
   }
@@ -367,7 +404,7 @@ async function handleAdminVerificationInput(
 
   /**
    * =====================================================
-   * بررسی Username
+   * Username
    * =====================================================
    */
 
@@ -380,6 +417,7 @@ async function handleAdminVerificationInput(
       `🔎 Checking admin username: ${username}`
     );
 
+
     const admin =
       await checkAdminValidity(
         db,
@@ -388,9 +426,11 @@ async function handleAdminVerificationInput(
 
 
     if (admin) {
+
       return await sendMessage(
         botToken,
         chatId,
+
         `✅ <b>ادمین معتبر است</b>
 
 این ادمین توسط AdminX تأیید شده است.
@@ -399,6 +439,7 @@ async function handleAdminVerificationInput(
 <b>@${admin.admin_username}</b>
 
 با اطمینان کامل می‌توانید با این ادمین همکاری کنید.`,
+
         getAdminVerificationKeyboard()
       );
     }
@@ -407,9 +448,11 @@ async function handleAdminVerificationInput(
     return await sendMessage(
       botToken,
       chatId,
+
       `❌ <b>این ادمین معتبر نیست</b>
 
 این یوزرنیم در لیست ادمین‌های تأییدشده AdminX پیدا نشد.`,
+
       getAdminVerificationKeyboard()
     );
   }
@@ -424,6 +467,7 @@ async function handleAdminVerificationInput(
   return await sendMessage(
     botToken,
     chatId,
+
     `❌ <b>فرمت واردشده صحیح نیست.</b>
 
 لطفاً یکی از موارد زیر را ارسال کنید:
@@ -431,6 +475,7 @@ async function handleAdminVerificationInput(
 • آیدی عددی ادمین
 • یوزرنیم ادمین
 • پیام فورواردشده از ادمین`,
+
     getAdminVerificationKeyboard()
   );
 }
@@ -479,8 +524,6 @@ export default async function handleMessage(
   /**
    * =====================================================
    * /start
-   *
-   * State قبلی کاملاً پاک می‌شود.
    * =====================================================
    */
 
@@ -503,7 +546,7 @@ export default async function handleMessage(
 
   /**
    * =====================================================
-   * دریافت State فعلی کاربر
+   * State فعلی کاربر
    * =====================================================
    */
 
@@ -519,10 +562,10 @@ export default async function handleMessage(
 
   /**
    * =====================================================
-   * بازگشت
+   * بازگشت عمومی
    *
-   * هر جایی که دکمه بازگشت وجود دارد،
-   * فعلاً کاربر را به صفحه اصلی می‌فرستیم.
+   * مهم:
+   * قبل از هر State دیگری بررسی می‌شود.
    * =====================================================
    */
 
@@ -544,10 +587,39 @@ export default async function handleMessage(
 
   /**
    * =====================================================
+   * درخواست ثبت حساب ادمینی
+   *
+   * تمام Stateهای مربوط به درخواست ادمینی
+   * اینجا به Handler اختصاصی فرستاده می‌شوند.
+   *
+   * استعلام ادمین اصلاً وارد این بخش نمی‌شود.
+   * =====================================================
+   */
+
+  if (
+    currentState ===
+      USER_STATES.WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION ||
+
+    currentState ===
+      USER_STATES.WAITING_FOR_ADMIN_APPLICATION_NAME ||
+
+    currentState ===
+      USER_STATES.WAITING_FOR_ADMIN_APPLICATION_PHONE
+  ) {
+
+    return await handleAdminApplication(
+      message,
+      env,
+      db
+    );
+  }
+
+
+  /**
+   * =====================================================
    * حالت استعلام ادمین
    *
-   * تا زمانی که بازگشت نزده،
-   * پیام‌ها فقط برای استعلام بررسی می‌شوند.
+   * این بخش کاملاً جدا از درخواست ثبت حساب است.
    * =====================================================
    */
 
@@ -615,15 +687,17 @@ export default async function handleMessage(
     return await sendMessage(
       botToken,
       chatId,
+
       `💰 <b>کسب درآمد با AdminX</b>
 
 اگر قصد دارید به عنوان ادمین با AdminX همکاری کنید، می‌توانید درخواست ثبت حساب ادمینی خود را ارسال کنید.
 
-قبل از ثبت درخواست توجه داشته باشید که برای ارسال درخواست، ابتدا باید دوره را خریداری کرده باشید.
+برای ثبت درخواست، ابتدا باید دوره آموزشی AdminX را خریداری کرده باشید.
 
-پس از ارسال درخواست، اطلاعات شما توسط تیم AdminX بررسی می‌شود و در صورت تأیید، حساب ادمینی شما در سیستم AdminX ثبت خواهد شد.
+پس از ارسال درخواست، اطلاعات شما توسط تیم AdminX بررسی می‌شود و در صورت تأیید، حساب ادمینی شما در سیستم ثبت خواهد شد.
 
 برای شروع فرآیند ثبت درخواست، گزینه زیر را انتخاب کنید.`,
+
       getEarnMoneyKeyboard()
     );
   }
@@ -631,45 +705,58 @@ export default async function handleMessage(
 
   /**
    * =====================================================
-   * درخواست ثبت حساب ادمینی
-   *
-   * فعلاً فقط نقطه ورود است.
-   * منطق اصلی بعداً در فایل جداگانه قرار می‌گیرد.
+   * شروع درخواست ثبت حساب ادمینی
    * =====================================================
    */
 
-/**
- * =====================================================
- * درخواست ثبت حساب ادمینی
- * =====================================================
- */
+  if (
+    text ===
+    EARN_MONEY_BUTTONS.APPLY_ADMIN
+  ) {
 
-if (
-  text ===
-  EARN_MONEY_BUTTONS.APPLY_ADMIN
-) {
+    await setUserState(
+      db,
+      userId,
+      USER_STATES.WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION
+    );
 
-  await setUserState(
-    db,
-    userId,
-    USER_STATES.WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION
-  );
 
-  return await sendMessage(
-    botToken,
-    chatId,
+    return await sendMessage(
+      botToken,
+      chatId,
 
-    `📝 <b>ثبت درخواست حساب ادمینی</b>
+      `📝 <b>ثبت درخواست حساب ادمینی</b>
 
-برای ثبت درخواست همکاری با AdminX، ابتدا باید دوره را خریداری کرده باشید.
+برای ثبت درخواست همکاری با AdminX، ابتدا باید دوره آموزشی را خریداری کرده باشید.
 
-اگر دوره را خریداری کرده‌اید، گزینه زیر را انتخاب کنید تا فرآیند ثبت درخواست شروع شود.
+اگر دوره را خریداری کرده‌اید، گزینه زیر را انتخاب کنید تا فرآیند ثبت اطلاعات شما شروع شود.
 
-⚠️ اطلاعاتی که در مراحل بعدی وارد می‌کنید باید کاملاً واقعی و متعلق به خودتان باشد. اطلاعات نادرست ممکن است باعث رد شدن درخواست شود.`,
+⚠️ <b>توجه:</b>
+اطلاعاتی که در مراحل بعدی وارد می‌کنید باید کاملاً واقعی و متعلق به خودتان باشد.
 
-    getAdminApplicationStartKeyboard()
-  );
-}
+در صورت وارد کردن اطلاعات نادرست یا غیرواقعی، ممکن است درخواست شما تأیید نشود.`,
+
+      getAdminApplicationStartKeyboard()
+    );
+  }
+
+
+  /**
+   * =====================================================
+   * تأیید خرید دوره و شروع فرم
+   * =====================================================
+   */
+
+  if (
+    text === '✅ دوره را خریداری کرده‌ام'
+  ) {
+
+    return await startAdminApplication(
+      message,
+      env,
+      db
+    );
+  }
 
 
   /**
@@ -686,9 +773,11 @@ if (
     return await sendMessage(
       botToken,
       chatId,
+
       `❓ <b>راهنما و پشتیبانی</b>
 
 در صورت نیاز به راهنمایی، از طریق پشتیبانی AdminX اقدام کنید.`,
+
       getMainMenuKeyboard()
     );
   }
@@ -703,7 +792,9 @@ if (
   return await sendMessage(
     botToken,
     chatId,
+
     'لطفاً یکی از گزینه‌های موجود در منو را انتخاب کنید.',
+
     getMainMenuKeyboard()
   );
 }
