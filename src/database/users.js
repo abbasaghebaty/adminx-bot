@@ -1,3 +1,14 @@
+/**
+ * User Database
+ *
+ * مسیر:
+ * src/database/users.js
+ *
+ * مسئول:
+ * - ثبت کاربر
+ * - بروزرسانی اطلاعات کاربر
+ */
+
 export async function saveUser(db, user) {
   await db
     .prepare(`
@@ -7,7 +18,7 @@ export async function saveUser(db, user) {
         first_name,
         last_name,
         language_code,
-        is_premium
+        is_bot
       )
       VALUES (?, ?, ?, ?, ?, ?)
       ON CONFLICT(telegram_id)
@@ -16,7 +27,7 @@ export async function saveUser(db, user) {
         first_name = excluded.first_name,
         last_name = excluded.last_name,
         language_code = excluded.language_code,
-        is_premium = excluded.is_premium,
+        is_bot = excluded.is_bot,
         updated_at = CURRENT_TIMESTAMP
     `)
     .bind(
@@ -25,7 +36,7 @@ export async function saveUser(db, user) {
       user.first_name ?? null,
       user.last_name ?? null,
       user.language_code ?? null,
-      user.is_premium ? 1 : 0,
+      user.is_bot ? 1 : 0,
     )
     .run();
 }
