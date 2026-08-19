@@ -393,7 +393,7 @@ async function handleAdminVerificationInput(
 /**
  * Handler اصلی پیام
  */
-async function handleMessage(
+export default async function handleMessage(
   message,
   env
 ) {
