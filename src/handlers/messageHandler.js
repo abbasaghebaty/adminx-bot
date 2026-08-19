@@ -53,7 +53,6 @@ function extractUsername(text) {
 
   const value = text.trim();
 
-  // اگر فقط یک @username ارسال شده
   if (/^@?[a-zA-Z0-9_]{5,32}$/.test(value)) {
     return value;
   }
@@ -64,9 +63,6 @@ function extractUsername(text) {
 
 /**
  * استخراج Telegram ID از متن
- *
- * اگر کاربر عدد ارسال کند، آن را به عنوان Telegram ID
- * در نظر می‌گیریم.
  */
 function extractTelegramId(text) {
   if (!text) {
@@ -84,6 +80,54 @@ function extractTelegramId(text) {
 
 
 /**
+ * ارسال منوی خرید دوره
+ */
+async function showCourseMenu(
+  message,
+  env
+) {
+  return await sendMessage(
+    env.TELEGRAM_BOT_TOKEN,
+    message.chat.id,
+    '🛍 <b>خرید دوره</b>\n\nلطفاً یکی از گزینه‌های زیر را انتخاب کنید.',
+    getCourseMenuKeyboard()
+  );
+}
+
+
+/**
+ * ورود به حالت استعلام ادمین
+ */
+async function startAdminVerification(
+  message,
+  env,
+  db
+) {
+  await setUserState(
+    db,
+    message.from.id,
+    USER_STATES.ADMIN_VERIFICATION
+  );
+
+  return await sendMessage(
+    env.TELEGRAM_BOT_TOKEN,
+    message.chat.id,
+    `🔎 <b>استعلام ادمین</b>
+
+آیدی عددی یا username ادمین را ارسال کنید.
+
+مثال:
+<code>123456789</code>
+
+یا:
+
+<code>@username</code>`,
+    getAdminVerificationKeyboard()
+  );
+}
+
+
+/**
  * پردازش استعلام ادمین
  */
 async function handleAdminVerificationInput(
@@ -94,17 +138,35 @@ async function handleAdminVerificationInput(
   const botToken = env.TELEGRAM_BOT_TOKEN;
   const chatId = message.chat.id;
 
+  /**
+   * خیلی مهم:
+   * بازگشت نباید هیچ‌وقت وارد جستجوی ادمین شود.
+   */
+  if (message.text === '← بازگشت') {
+    await clearUserState(
+      db,
+      message.from.id
+    );
+
+    return await showCourseMenu(
+      message,
+      env
+    );
+  }
+
   if (!db) {
     return await sendMessage(
       botToken,
       chatId,
-      '❌ در حال حاضر امکان استعلام وجود ندارد. لطفاً بعداً دوباره تلاش کنید.'
+      '❌ در حال حاضر امکان استعلام وجود ندارد. لطفاً بعداً دوباره تلاش کنید.',
+      getAdminVerificationKeyboard()
     );
   }
 
+
   /**
    * =====================================================
-   * حالت اول: پیام Forward شده
+   * Forward شده
    * =====================================================
    */
 
@@ -117,10 +179,6 @@ async function handleAdminVerificationInput(
       JSON.stringify(origin)
     );
 
-    /**
-     * Telegram ممکن است Forward را به شکل
-     * user داشته باشد.
-     */
     if (
       origin.type === 'user' &&
       origin.sender_user
@@ -171,9 +229,6 @@ async function handleAdminVerificationInput(
       );
     }
 
-    /**
-     * اگر Telegram اطلاعات فرستنده اصلی را نداد
-     */
     await clearUserState(
       db,
       message.from.id
@@ -194,7 +249,62 @@ async function handleAdminVerificationInput(
 
   /**
    * =====================================================
-   * حالت دوم: Username
+   * Telegram ID
+   * =====================================================
+   */
+
+  const telegramId =
+    extractTelegramId(message.text);
+
+  if (telegramId) {
+
+    console.log(
+      `🔎 Checking admin Telegram ID: ${telegramId}`
+    );
+
+    const admin =
+      await checkAdminValidityByTelegramId(
+        db,
+        telegramId
+      );
+
+    await clearUserState(
+      db,
+      message.from.id
+    );
+
+    if (admin) {
+      return await sendMessage(
+        botToken,
+        chatId,
+        `✅ <b>ادمین معتبر است</b>
+
+این ادمین توسط AdminX تأیید شده است.
+
+👤 ادمین:
+<b>@${admin.admin_username}</b>
+
+با اطمینان کامل می‌توانید با این ادمین همکاری کنید.`,
+        getCourseMenuKeyboard()
+      );
+    }
+
+    return await sendMessage(
+      botToken,
+      chatId,
+      `❌ <b>این ادمین معتبر نیست</b>
+
+این آیدی در لیست ادمین‌های تأییدشده AdminX پیدا نشد.
+
+⚠️ قبل از هرگونه پرداخت یا همکاری، از معتبر بودن ادمین اطمینان حاصل کنید.`,
+      getCourseMenuKeyboard()
+    );
+  }
+
+
+  /**
+   * =====================================================
+   * Username
    * =====================================================
    */
 
@@ -224,4 +334,133 @@ async function handleAdminVerificationInput(
         chatId,
         `✅ <b>ادمین معتبر است</b>
 
-این ادمین توسط AdminX
+این ادمین توسط AdminX تأیید شده است.
+
+👤 ادمین:
+<b>@${admin.admin_username}</b>
+
+با اطمینان کامل می‌توانید با این ادمین همکاری کنید.`,
+        getCourseMenuKeyboard()
+      );
+    }
+
+    return await sendMessage(
+      botToken,
+      chatId,
+      `❌ <b>این ادمین معتبر نیست</b>
+
+username ارسال‌شده در لیست ادمین‌های تأییدشده AdminX پیدا نشد.
+
+⚠️ قبل از هرگونه پرداخت یا همکاری، از معتبر بودن ادمین اطمینان حاصل کنید.`,
+      getCourseMenuKeyboard()
+    );
+  }
+
+
+  /**
+   * =====================================================
+   * ورودی نامعتبر
+   * =====================================================
+   */
+
+  return await sendMessage(
+    botToken,
+    chatId,
+    `❌ <b>فرمت واردشده صحیح نیست.</b>
+
+لطفاً آیدی عددی یا username ادمین را ارسال کنید.
+
+مثال:
+<code>123456789</code>
+
+یا:
+<code>@username</code>`,
+    getAdminVerificationKeyboard()
+  );
+}
+
+
+/**
+ * =========================================================
+ * Handler اصلی
+ * =========================================================
+ */
+export async function handleMessage(
+  message,
+  env
+) {
+  if (!message || !message.chat) {
+    return;
+  }
+
+  const db = env.DB;
+  const botToken = env.TELEGRAM_BOT_TOKEN;
+  const chatId = message.chat.id;
+  const telegramId = message.from?.id;
+
+  if (!telegramId) {
+    return;
+  }
+
+
+  /**
+   * =====================================================
+   * /start
+   * =====================================================
+   *
+   * /start باید همیشه state قبلی را پاک کند.
+   * بنابراین اگر کاربر قبلاً داخل استعلام بوده،
+   * دوباره /start بزند، دیگر متن‌های بعدی استعلام نمی‌شوند.
+   */
+  if (
+    message.text === '/start' ||
+    message.text?.startsWith('/start ')
+  ) {
+    await clearUserState(
+      db,
+      telegramId
+    );
+
+    return await sendMessage(
+      botToken,
+      chatId,
+      `سلام <b>${message.from.first_name || 'دوست عزیز'}</b>
+
+به <b>آکادمی AdminX</b> خوش آمدید.
+
+از منوی زیر گزینه موردنظر خود را انتخاب کنید.`,
+      getMainMenuKeyboard()
+    );
+  }
+
+
+  /**
+   * =====================================================
+   * دریافت state فعلی کاربر
+   * =====================================================
+   */
+  const currentState =
+    await getUserState(
+      db,
+      telegramId
+    );
+
+
+  /**
+   * =====================================================
+   * بازگشت
+   * =====================================================
+   *
+   * این شرط باید قبل از استعلام قرار داشته باشد.
+   *
+   * اگر کاربر داخل استعلام باشد:
+   * استعلام → منوی خرید دوره
+   *
+   * اگر داخل استعلام نباشد:
+   * منوی خرید دوره → منوی اصلی
+   */
+  if (message.text === '← بازگشت') {
+
+    if (
+      currentState ===
+      USER_STATES.ADMIN_VER
