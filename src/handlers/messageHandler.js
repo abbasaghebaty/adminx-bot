@@ -559,6 +559,35 @@ export default async function handleMessage(
   const currentState =
     userState?.state || null;
 
+  /**
+ * =====================================================
+ * درخواست ثبت حساب ادمینی
+ * =====================================================
+ *
+ * تمام مراحل فرم در Handler جداگانه پردازش می‌شوند.
+ */
+
+if (
+  currentState ===
+    USER_STATES.WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION ||
+
+  currentState ===
+    USER_STATES.WAITING_FOR_ADMIN_APPLICATION_FIRST_NAME ||
+
+  currentState ===
+    USER_STATES.WAITING_FOR_ADMIN_APPLICATION_LAST_NAME ||
+
+  currentState ===
+    USER_STATES.WAITING_FOR_ADMIN_APPLICATION_PHONE
+) {
+
+  return await handleAdminApplication(
+    message,
+    env,
+    db,
+    currentState
+  );
+}
 
   /**
    * =====================================================
