@@ -4,55 +4,46 @@
  * مسیر:
  * src/database/userStates.js
  *
- * مسئول:
- * - نگهداری وضعیت موقت کاربران
- * - مدیریت مرحله استعلام ادمین
- * - مدیریت مراحل ثبت درخواست ادمین
+ * مسئول نگهداری وضعیت موقت کاربران
  */
 
 export const USER_STATES = Object.freeze({
 
   /**
-   * =====================================================
    * استعلام ادمین
-   * =====================================================
    */
-
   WAITING_FOR_ADMIN_VERIFICATION:
     'waiting_for_admin_verification',
 
+  /**
+   * شروع ثبت درخواست ادمینی
+   */
+  WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION:
+    'waiting_for_admin_application_confirmation',
 
   /**
-   * =====================================================
-   * ثبت درخواست ادمین
-   * =====================================================
-   *
-   * روند:
-   *
-   * شروع درخواست
-   * ↓
-   * نام
-   * ↓
-   * نام خانوادگی
-   * ↓
-   * شماره تلفن
-   * ↓
-   * یوزرنیم ادمینی
-   * ↓
-   * ثبت نهایی
+   * دریافت نام
    */
+  WAITING_FOR_ADMIN_APPLICATION_FIRST_NAME:
+    'waiting_for_admin_application_first_name',
 
-  ADMIN_APPLICATION_FIRST_NAME:
-    'admin_application_first_name',
+  /**
+   * دریافت نام خانوادگی
+   */
+  WAITING_FOR_ADMIN_APPLICATION_LAST_NAME:
+    'waiting_for_admin_application_last_name',
 
-  ADMIN_APPLICATION_LAST_NAME:
-    'admin_application_last_name',
+  /**
+   * دریافت شماره تلفن
+   */
+  WAITING_FOR_ADMIN_APPLICATION_PHONE:
+    'waiting_for_admin_application_phone',
 
-  ADMIN_APPLICATION_PHONE:
-    'admin_application_phone',
-
-  ADMIN_APPLICATION_USERNAME:
-    'admin_application_username',
+  /**
+   * بررسی نهایی اطلاعات
+   */
+  WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION:
+    'waiting_for_admin_application_final_confirmation',
 
 });
 
@@ -144,41 +135,4 @@ export async function clearUserState(
     `)
     .bind(userId)
     .run();
-}
-
-
-/**
- * بررسی اینکه کاربر در یکی از مراحل
- * ثبت درخواست ادمین قرار دارد یا خیر
- */
-export function isAdminApplicationState(
-  state
-) {
-  return (
-    state ===
-      USER_STATES.ADMIN_APPLICATION_FIRST_NAME ||
-
-    state ===
-      USER_STATES.ADMIN_APPLICATION_LAST_NAME ||
-
-    state ===
-      USER_STATES.ADMIN_APPLICATION_PHONE ||
-
-    state ===
-      USER_STATES.ADMIN_APPLICATION_USERNAME
-  );
-}
-
-
-/**
- * بررسی اینکه کاربر در حالت
- * استعلام ادمین قرار دارد یا خیر
- */
-export function isAdminVerificationState(
-  state
-) {
-  return (
-    state ===
-    USER_STATES.WAITING_FOR_ADMIN_VERIFICATION
-  );
 }
