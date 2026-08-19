@@ -1,14 +1,3 @@
-/**
- * User Database
- *
- * مسیر:
- * src/database/users.js
- *
- * مسئول:
- * - ثبت کاربر
- * - بروزرسانی اطلاعات کاربر
- */
-
 export async function saveUser(db, user) {
   await db
     .prepare(`
