@@ -18,6 +18,7 @@ import {
   EARN_MONEY_BUTTONS,
   getAdminApplicationStartKeyboard,
   getAdminApplicationBackKeyboard,
+  getAdminApplicationPhoneKeyboard,
 } from '../../keyboards/earnMoney.js';
 
 import {
@@ -27,8 +28,11 @@ import {
 
 
 /**
- * شروع فرآیند ثبت درخواست
+ * =====================================================
+ * شروع درخواست
+ * =====================================================
  */
+
 export async function startAdminApplication(
   message,
   env,
@@ -47,9 +51,10 @@ export async function startAdminApplication(
 
     `📝 <b>ثبت درخواست حساب ادمینی</b>
 
-برای شروع، لطفاً <b>نام واقعی</b> خود را وارد کنید.
+برای شروع فرآیند ثبت درخواست، لطفاً <b>نام واقعی</b> خود را وارد کنید.
 
-⚠️ نام و اطلاعات واقعی خود را وارد کنید؛ اطلاعات نادرست ممکن است باعث رد شدن درخواست شما شود.`,
+⚠️ نام و نام خانوادگی باید واقعی و متعلق به خودتان باشد.
+در صورت وارد کردن اطلاعات نادرست، درخواست شما ممکن است رد شود.`,
 
     getAdminApplicationBackKeyboard()
   );
@@ -57,8 +62,11 @@ export async function startAdminApplication(
 
 
 /**
- * پردازش مراحل فرم
+ * =====================================================
+ * پردازش فرم
+ * =====================================================
  */
+
 export async function handleAdminApplication(
   message,
   env,
@@ -72,12 +80,17 @@ export async function handleAdminApplication(
   const chatId =
     message.chat.id;
 
+  const userId =
+    message.from.id;
+
   const text =
     message.text?.trim();
 
 
   /**
-   * نام
+   * =====================================================
+   * مرحله نام
+   * =====================================================
    */
 
   if (
@@ -86,35 +99,46 @@ export async function handleAdminApplication(
   ) {
 
     if (!text) {
+
       return await sendMessage(
         botToken,
         chatId,
-        `❌ لطفاً نام واقعی خود را وارد کنید.`,
+
+        `❌ <b>نام وارد نشده است.</b>
+
+لطفاً نام واقعی خود را وارد کنید.`,
+
         getAdminApplicationBackKeyboard()
       );
     }
 
+
     await setUserState(
       db,
-      message.from.id,
+      userId,
       USER_STATES.WAITING_FOR_ADMIN_APPLICATION_LAST_NAME
     );
+
 
     return await sendMessage(
       botToken,
       chatId,
-      `👤 <b>نام ثبت شد.</b>
+
+      `✅ نام دریافت شد.
 
 حالا لطفاً <b>نام خانوادگی واقعی</b> خود را وارد کنید.
 
-⚠️ از وارد کردن نام مستعار یا اطلاعات غیرواقعی خودداری کنید.`,
+⚠️ لطفاً از نام مستعار یا اطلاعات غیرواقعی استفاده نکنید.`,
+
       getAdminApplicationBackKeyboard()
     );
   }
 
 
   /**
-   * نام خانوادگی
+   * =====================================================
+   * مرحله نام خانوادگی
+   * =====================================================
    */
 
   if (
@@ -123,56 +147,48 @@ export async function handleAdminApplication(
   ) {
 
     if (!text) {
+
       return await sendMessage(
         botToken,
         chatId,
-        `❌ لطفاً نام خانوادگی واقعی خود را وارد کنید.`,
+
+        `❌ <b>نام خانوادگی وارد نشده است.</b>
+
+لطفاً نام خانوادگی واقعی خود را وارد کنید.`,
+
         getAdminApplicationBackKeyboard()
       );
     }
 
+
     await setUserState(
       db,
-      message.from.id,
+      userId,
       USER_STATES.WAITING_FOR_ADMIN_APPLICATION_PHONE
     );
+
 
     return await sendMessage(
       botToken,
       chatId,
+
       `📱 <b>شماره تلفن</b>
 
-لطفاً شماره تلفن خود را وارد کنید.
+لطفاً شماره تلفن خود را ارسال کنید.
 
-می‌توانید شماره را به صورت دستی ارسال کنید یا با استفاده از دکمه زیر، شماره تلفن همین حساب تلگرام را برای ما ارسال کنید.
+می‌توانید شماره را به صورت دستی وارد کنید یا با استفاده از دکمه زیر، شماره تلفن همین حساب تلگرام را ارسال کنید.
 
-⚠️ لطفاً شماره‌ای را ارسال کنید که متعلق به خودتان باشد.`,
+⚠️ شماره تلفن باید متعلق به خودتان باشد.`,
 
-      {
-        keyboard: [
-          [
-            {
-              text:
-                '📱 ارسال شماره همین حساب',
-              request_contact: true,
-            },
-          ],
-          [
-            {
-              text:
-                EARN_MONEY_BUTTONS.BACK,
-            },
-          ],
-        ],
-        resize_keyboard: true,
-        one_time_keyboard: false,
-      }
+      getAdminApplicationPhoneKeyboard()
     );
   }
 
 
   /**
-   * شماره تلفن
+   * =====================================================
+   * مرحله شماره تلفن
+   * =====================================================
    */
 
   if (
@@ -184,18 +200,14 @@ export async function handleAdminApplication(
 
 
     /**
-     * اگر کاربر با دکمه Contact
-     * شماره خودش را ارسال کرده باشد
+     * شماره ارسال‌شده توسط Contact
      */
 
-    if (
-      message.contact
-    ) {
+    if (message.contact) {
 
       /**
-       * امنیت:
-       * شماره باید متعلق به همین
-       * حساب تلگرام باشد.
+       * اگر Telegram مشخص کرده باشد
+       * که Contact متعلق به کاربر دیگری است
        */
 
       if (
@@ -207,12 +219,15 @@ export async function handleAdminApplication(
         return await sendMessage(
           botToken,
           chatId,
-          `❌ <b>شماره متعلق به این حساب نیست.</b>
+
+          `❌ <b>این شماره متعلق به حساب شما نیست.</b>
 
 لطفاً از دکمه «ارسال شماره همین حساب» استفاده کنید.`,
-          getAdminApplicationBackKeyboard()
+
+          getAdminApplicationPhoneKeyboard()
         );
       }
+
 
       phoneNumber =
         message.contact.phone_number;
@@ -220,13 +235,14 @@ export async function handleAdminApplication(
 
 
     /**
-     * اگر شماره به صورت دستی وارد شده باشد
+     * شماره واردشده به صورت دستی
      */
 
     else if (text) {
 
       const normalizedPhone =
         text.replace(/[^\d+]/g, '');
+
 
       if (
         normalizedPhone.length < 8 ||
@@ -236,41 +252,47 @@ export async function handleAdminApplication(
         return await sendMessage(
           botToken,
           chatId,
+
           `❌ <b>شماره تلفن صحیح نیست.</b>
 
-لطفاً شماره تلفن معتبر خود را وارد کنید.`,
-          getAdminApplicationBackKeyboard()
+لطفاً یک شماره تلفن معتبر وارد کنید.`,
+
+          getAdminApplicationPhoneKeyboard()
         );
       }
+
 
       phoneNumber =
         normalizedPhone;
     }
 
 
+    /**
+     * شماره دریافت نشده
+     */
+
     if (!phoneNumber) {
 
       return await sendMessage(
         botToken,
         chatId,
-        `❌ لطفاً شماره تلفن خود را ارسال کنید.`,
-        getAdminApplicationBackKeyboard()
+
+        `❌ <b>شماره تلفن دریافت نشد.</b>
+
+لطفاً شماره تلفن خود را وارد کنید یا از دکمه ارسال شماره همین حساب استفاده کنید.`,
+
+        getAdminApplicationPhoneKeyboard()
       );
     }
 
 
     /**
-     * فعلاً State بعدی را آماده می‌کنیم.
+     * فعلاً اینجا متوقف می‌شویم.
      *
-     * در مرحله بعد اطلاعات فرم را
-     * در دیتابیس ذخیره می‌کنیم.
+     * مرحله بعد:
+     * ذخیره اطلاعات در دیتابیس
+     * و ارسال درخواست برای مدیران.
      */
-
-    await setUserState(
-      db,
-      message.from.id,
-      USER_STATES.WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION
-    );
 
     return await sendMessage(
       botToken,
@@ -280,33 +302,7 @@ export async function handleAdminApplication(
 
 اطلاعات اولیه شما دریافت شد.
 
-در مرحله بعد اطلاعات کامل درخواست شما ثبت و برای بررسی تیم AdminX ارسال خواهد شد.
-
-⚠️ توجه: نام و نام خانوادگی باید واقعی باشند؛ اطلاعات نادرست می‌تواند باعث رد درخواست شود.`,
-
-      getAdminApplicationBackKeyboard()
-    );
-  }
-
-
-  /**
-   * مرحله تأیید نهایی
-   *
-   * فعلاً در مرحله بعد تکمیل می‌شود.
-   */
-
-  if (
-    currentState ===
-    USER_STATES.WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION
-  ) {
-
-    return await sendMessage(
-      botToken,
-      chatId,
-
-      `⏳ <b>درخواست شما در حال آماده‌سازی است.</b>
-
-این مرحله در نسخه بعدی با ثبت اطلاعات در دیتابیس و ارسال درخواست برای مدیران تکمیل می‌شود.`,
+مرحله بعد، ثبت اطلاعات درخواست و ارسال آن برای مدیران AdminX است.`,
 
       getAdminApplicationBackKeyboard()
     );
