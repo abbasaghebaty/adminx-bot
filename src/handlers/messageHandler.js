@@ -12,7 +12,12 @@
  * - Forward استعلام
  * - کسب درآمد
  * - درخواست ثبت حساب ادمینی
- */
+*/
+
+import {
+  startAdminApplication,
+  handleAdminApplication,
+} from './adminApplicationHandler.js';
 
 import {
   EARN_MONEY_BUTTONS,
