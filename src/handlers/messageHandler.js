@@ -26,7 +26,6 @@ import {
 } from '../../keyboards/courseMenu.js';
 
 import {
-  getUserByTelegramId,
   checkAdminValidity,
   checkAdminValidityByTelegramId,
 } from '../database/adminVerifications.js';
@@ -107,7 +106,11 @@ async function showCourseMenu(
     message.chat.id,
     `🛍 <b>خرید دوره</b>
 
-لطفاً یکی از گزینه‌های زیر را انتخاب کنید.`,
+قبل از هرگونه خرید یا پرداخت، ابتدا از معتبر بودن ادمینی که قصد همکاری با او را دارید مطمئن شوید.
+
+برای جلوگیری از همکاری با ادمین‌های جعلی و افراد کلاهبردار، می‌توانید اطلاعات ادمین را از طریق سیستم AdminX استعلام بگیرید.
+
+🔎 از دکمه زیر برای استعلام ادمین استفاده کنید.`,
     getCourseMenuKeyboard()
   );
 }
@@ -130,17 +133,14 @@ async function startAdminVerification(
   return await sendMessage(
     env.TELEGRAM_BOT_TOKEN,
     message.chat.id,
-    `🔎 <b>استعلام ادمین</b>
+    `🔎 <b>استعلام معتبر بودن ادمین</b>
 
-آیدی عددی، یوزرنیم یا پیام فورواردشده ادمین را ارسال کنید.
+جهت استعلام معتبر بودن ادمین، یکی از موارد زیر را ارسال کنید:
 
-مثال:
+• آیدی ادمین
+• یا یک پیام از طرف همان ادمین را برای ربات ارسال کنید.
 
-<code>123456789</code>
-
-یا:
-
-<code>@username</code>`,
+سیستم پس از دریافت اطلاعات، معتبر بودن ادمین را بررسی می‌کند.`,
     getAdminVerificationKeyboard()
   );
 }
@@ -206,21 +206,16 @@ async function handleAdminVerificationInput(
       origin.type === 'user' &&
       origin.sender_user
     ) {
-      const originalUserId =
-        origin.sender_user.id;
+const originalUserId =
+  origin.sender_user.id;
 
-      const admin =
-        await checkAdminValidityByTelegramId(
-          db,
-          originalUserId
-        );
+const admin =
+  await checkAdminValidityByTelegramId(
+    db,
+    originalUserId
+  );
 
-      await clearUserState(
-        db,
-        message.from.id
-      );
-
-      if (admin) {
+if (admin) {
         return await sendMessage(
           botToken,
           chatId,
@@ -232,7 +227,7 @@ async function handleAdminVerificationInput(
 <b>@${admin.admin_username}</b>
 
 با اطمینان کامل می‌توانید با این ادمین همکاری کنید.`,
-          getCourseMenuKeyboard()
+          getAdminVerificationKeyboard()
         );
       }
 
@@ -244,7 +239,7 @@ async function handleAdminVerificationInput(
 اطلاعات این ادمین در لیست ادمین‌های معتبر ما پیدا نشد.
 
 ⚠️ قبل از هرگونه پرداخت، حتماً از معتبر بودن ادمین اطمینان حاصل کنید.`,
-        getCourseMenuKeyboard()
+        getAdminVerificationKeyboard()
       );
     }
 
@@ -284,11 +279,6 @@ async function handleAdminVerificationInput(
         telegramId
       );
 
-    await clearUserState(
-      db,
-      message.from.id
-    );
-
     if (admin) {
       return await sendMessage(
         botToken,
@@ -301,7 +291,7 @@ async function handleAdminVerificationInput(
 <b>@${admin.admin_username}</b>
 
 با اطمینان کامل می‌توانید با این ادمین همکاری کنید.`,
-        getCourseMenuKeyboard()
+        getAdminVerificationKeyboard()
       );
     }
 
@@ -311,7 +301,7 @@ async function handleAdminVerificationInput(
       `❌ <b>این ادمین معتبر نیست</b>
 
 این آیدی در لیست ادمین‌های تأییدشده AdminX پیدا نشد.`,
-      getCourseMenuKeyboard()
+      getAdminVerificationKeyboard()
     );
   }
 
@@ -331,18 +321,14 @@ async function handleAdminVerificationInput(
       `🔎 Checking admin username: ${username}`
     );
 
-    const admin =
-      await checkAdminValidity(
-        db,
-        username
-      );
+const admin =
+  await checkAdminValidity(
+    db,
+    username
+  );
 
-    await clearUserState(
-      db,
-      message.from.id
-    );
-
-    if (admin) {
+if (admin) {
+  
       return await sendMessage(
         botToken,
         chatId,
@@ -354,7 +340,7 @@ async function handleAdminVerificationInput(
 <b>@${admin.admin_username}</b>
 
 با اطمینان کامل می‌توانید با این ادمین همکاری کنید.`,
-        getCourseMenuKeyboard()
+        getAdminVerificationKeyboard()
       );
     }
 
@@ -364,7 +350,7 @@ async function handleAdminVerificationInput(
       `❌ <b>این ادمین معتبر نیست</b>
 
 این یوزرنیم در لیست ادمین‌های تأییدشده AdminX پیدا نشد.`,
-      getCourseMenuKeyboard()
+      getAdminVerificationKeyboard()
     );
   }
 
@@ -532,27 +518,6 @@ export default async function handleMessage(
     return await showCourseMenu(
       message,
       env
-    );
-  }
-
-
-  /**
-   * =====================================================
-   * دریافت شماره کارت
-   * =====================================================
-   */
-
-  if (
-    text ===
-    COURSE_MENU_BUTTONS.GET_CARD
-  ) {
-    return await sendMessage(
-      botToken,
-      chatId,
-      `💳 <b>دریافت شماره کارت</b>
-
-اطلاعات پرداخت دوره در این بخش نمایش داده می‌شود.`,
-      getCourseMenuKeyboard()
     );
   }
 
