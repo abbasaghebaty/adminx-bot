@@ -9,19 +9,31 @@
 
 export const USER_STATES = Object.freeze({
 
-  // استعلام ادمین
+  /**
+   * ================================
+   * استعلام ادمین
+   * ================================
+   */
+
   WAITING_FOR_ADMIN_VERIFICATION:
     'waiting_for_admin_verification',
 
-  // کاربر درخواست ثبت حساب ادمینی را زده
+
+  /**
+   * ================================
+   * ثبت درخواست حساب ادمینی
+   * ================================
+   */
+
   WAITING_FOR_ADMIN_APPLICATION_CONFIRMATION:
     'waiting_for_admin_application_confirmation',
 
-  // کاربر تأیید کرده که دوره را خریده
-  WAITING_FOR_ADMIN_APPLICATION_NAME:
-    'waiting_for_admin_application_name',
+  WAITING_FOR_ADMIN_APPLICATION_FIRST_NAME:
+    'waiting_for_admin_application_first_name',
 
-  // دریافت شماره تلفن
+  WAITING_FOR_ADMIN_APPLICATION_LAST_NAME:
+    'waiting_for_admin_application_last_name',
+
   WAITING_FOR_ADMIN_APPLICATION_PHONE:
     'waiting_for_admin_application_phone',
 
