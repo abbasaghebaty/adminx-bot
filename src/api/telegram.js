@@ -11,10 +11,12 @@
  * - حذف پیام
  * - Callback Query
  * - ویرایش پیام
+ * - Rich Messages
  */
 
 const TELEGRAM_API =
   'https://api.telegram.org';
+
 
 async function telegramRequest(
   method,
@@ -30,15 +32,20 @@ async function telegramRequest(
   const url =
     `${TELEGRAM_API}/bot${env.BOT_TOKEN}/${method}`;
 
-  const response = await fetch(url, {
-    method: 'POST',
+  const response = await fetch(
+    url,
+    {
+      method: 'POST',
 
-    headers: {
-      'Content-Type': 'application/json',
+      headers: {
+        'Content-Type':
+          'application/json',
+      },
+
+      body:
+        JSON.stringify(payload),
     },
-
-    body: JSON.stringify(payload),
-  });
+  );
 
   const data =
     await response.json();
@@ -61,6 +68,7 @@ async function telegramRequest(
   return data;
 }
 
+
 export async function sendMessage(
   chatId,
   text,
@@ -79,6 +87,26 @@ export async function sendMessage(
   );
 }
 
+
+export async function sendRichMessage(
+  chatId,
+  richMessage,
+  env,
+  options = {},
+) {
+  return telegramRequest(
+    'sendRichMessage',
+    {
+      chat_id: chatId,
+      rich_message:
+        richMessage,
+      ...options,
+    },
+    env,
+  );
+}
+
+
 export async function deleteMessage(
   chatId,
   messageId,
@@ -94,6 +122,7 @@ export async function deleteMessage(
   );
 }
 
+
 export async function deleteMessages(
   chatId,
   messageIds,
@@ -101,8 +130,9 @@ export async function deleteMessages(
 ) {
   const ids = [
     ...new Set(messageIds),
-  ].filter((id) =>
-    Number.isInteger(id),
+  ].filter(
+    (id) =>
+      Number.isInteger(id),
   );
 
   if (!ids.length) {
@@ -134,6 +164,7 @@ export async function deleteMessages(
   return results;
 }
 
+
 export async function answerCallbackQuery(
   callbackQueryId,
   env,
@@ -150,6 +181,7 @@ export async function answerCallbackQuery(
   );
 }
 
+
 export async function editMessageText(
   chatId,
   messageId,
@@ -157,15 +189,30 @@ export async function editMessageText(
   env,
   options = {},
 ) {
+  const payload = {
+    chat_id: chatId,
+    message_id: messageId,
+    ...options,
+  };
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      options,
+      'rich_message',
+    )
+  ) {
+    payload.rich_message =
+      options.rich_message;
+  } else {
+    payload.text = text;
+    payload.parse_mode = 'HTML';
+  }
+
+  delete payload.rich_message_placeholder;
+
   return telegramRequest(
     'editMessageText',
-    {
-      chat_id: chatId,
-      message_id: messageId,
-      text,
-      parse_mode: 'HTML',
-      ...options,
-    },
+    payload,
     env,
   );
 }
