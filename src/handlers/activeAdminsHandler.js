@@ -21,9 +21,7 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
-function buildAdminMention(
-  admin,
-) {
+function buildAdminMention(admin) {
   const telegramId =
     String(
       admin?.telegram_id ?? '',
@@ -35,20 +33,28 @@ function buildAdminMention(
         'بدون نام',
     );
 
+  /*
+   * اگر آیدی وجود نداشت،
+   * فقط اسم نمایش داده شود.
+   */
   if (!telegramId) {
     return displayName;
   }
 
+  /*
+   * فقط خود اسم لینک است.
+   *
+   * 🆔 خارج از تگ <a> قرار می‌گیرد.
+   */
   return (
+    `🆔 ` +
     `<a href="tg://user?id=${encodeURIComponent(telegramId)}">` +
     `${displayName}` +
     `</a>`
   );
 }
 
-function buildTopAdminsMessage(
-  data,
-) {
+function buildTopAdminsMessage(data) {
   if (!data.total) {
     return [
       '<b>👑 ادمین‌های برتر</b>',
@@ -59,28 +65,14 @@ function buildTopAdminsMessage(
 
   const lines =
     data.admins.map(
-      (admin, index) => {
-        const number =
-          String(
-            (data.page - 1) *
-              10 +
-              index +
-              1,
-          ).padStart(2, '0');
-
-        return (
-          `${number}. ` +
-          buildAdminMention(admin)
-        );
-      },
+      (admin) =>
+        buildAdminMention(admin),
     );
 
   return [
     '<b>👑 ادمین‌های برتر</b>',
     '',
     ...lines,
-    '',
-    `صفحه <b>${data.page}</b> از <b>${data.totalPages}</b>`,
   ].join('\n');
 }
 
@@ -114,11 +106,11 @@ export async function handleTopAdminsCallback(
   callbackQuery,
   env,
 ) {
-  const data =
+  const callbackData =
     callbackQuery.data ?? '';
 
   if (
-    !data.startsWith(
+    !callbackData.startsWith(
       'top_admins:',
     )
   ) {
@@ -127,7 +119,7 @@ export async function handleTopAdminsCallback(
 
   const page =
     Number(
-      data.split(':')[1],
+      callbackData.split(':')[1],
     );
 
   if (
