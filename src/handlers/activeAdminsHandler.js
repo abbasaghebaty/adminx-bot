@@ -12,69 +12,121 @@ import {
   getAdminsPaginationKeyboard,
 } from '../keyboards/adminsKeyboard.js';
 
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
 
-function buildAdminMention(admin) {
-  const telegramId =
-    String(
-      admin?.telegram_id ?? '',
-    ).trim();
-
-  const displayName =
-    escapeHtml(
-      admin?.display_name ??
-        'بدون نام',
+function utf16Length(value) {
+  return [...String(value ?? '')]
+    .reduce(
+      (length, character) =>
+        length +
+        (character.codePointAt(0) > 0xffff
+          ? 2
+          : 1),
+      0,
     );
-
-  /*
-   * اگر آیدی وجود نداشت،
-   * فقط اسم نمایش داده شود.
-   */
-  if (!telegramId) {
-    return displayName;
-  }
-
-  /*
-   * فقط خود اسم لینک است.
-   *
-   * 🆔 خارج از تگ <a> قرار می‌گیرد.
-   */
-  return (
-    `🆔 ` +
-    `<a href="tg://user?id=${encodeURIComponent(telegramId)}">` +
-    `${displayName}` +
-    `</a>`
-  );
 }
+
 
 function buildTopAdminsMessage(data) {
   if (!data.total) {
-    return [
-      '<b>👑 ادمین‌های برتر</b>',
-      '',
-      'فعلاً ادمینی ثبت نشده است.',
-    ].join('\n');
+    return {
+      text: [
+        '👑 ادمین‌های برتر',
+        '',
+        'فعلاً ادمینی ثبت نشده است.',
+      ].join('\n'),
+
+      entities: [
+        {
+          type: 'bold',
+          offset: 0,
+          length: utf16Length(
+            '👑 ادمین‌های برتر',
+          ),
+        },
+      ],
+    };
   }
 
-  const lines =
-    data.admins.map(
-      (admin) =>
-        buildAdminMention(admin),
-    );
 
-  return [
-    '<b>👑 ادمین‌های برتر</b>',
+  const lines = [
+    '👑 ادمین‌های برتر',
     '',
-    ...lines,
-  ].join('\n');
+  ];
+
+  const entities = [
+    {
+      type: 'bold',
+      offset: 0,
+      length: utf16Length(
+        '👑 ادمین‌های برتر',
+      ),
+    },
+  ];
+
+
+  for (const admin of data.admins) {
+    const displayName =
+      String(
+        admin?.display_name ??
+          'بدون نام',
+      ).trim() || 'بدون نام';
+
+    const telegramId =
+      String(
+        admin?.telegram_id ??
+          '',
+      ).trim();
+
+
+    const line =
+      telegramId
+        ? `🆔 ${displayName}`
+        : displayName;
+
+
+    const currentText =
+      lines.join('\n');
+
+    const prefix =
+      currentText.length === 0
+        ? ''
+        : '\n';
+
+
+    const offset =
+      utf16Length(
+        currentText + prefix,
+      );
+
+
+    lines.push(line);
+
+
+    if (telegramId) {
+      entities.push({
+        type: 'text_mention',
+        offset:
+          offset +
+          utf16Length('🆔 '),
+        length:
+          utf16Length(displayName),
+
+        user: {
+          id: Number(telegramId),
+          is_bot: false,
+          first_name: displayName,
+        },
+      });
+    }
+  }
+
+
+  return {
+    text: lines.join('\n'),
+    entities,
+  };
 }
+
 
 export async function sendTopAdmins(
   chatId,
@@ -88,11 +140,20 @@ export async function sendTopAdmins(
       10,
     );
 
+
+  const message =
+    buildTopAdminsMessage(data);
+
+
   return sendMessage(
     chatId,
-    buildTopAdminsMessage(data),
+    message.text,
     env,
     {
+      parse_mode: undefined,
+      entities:
+        message.entities,
+
       reply_markup:
         getAdminsPaginationKeyboard(
           data.page,
@@ -102,12 +163,14 @@ export async function sendTopAdmins(
   );
 }
 
+
 export async function handleTopAdminsCallback(
   callbackQuery,
   env,
 ) {
   const callbackData =
     callbackQuery.data ?? '';
+
 
   if (
     !callbackData.startsWith(
@@ -117,10 +180,12 @@ export async function handleTopAdminsCallback(
     return false;
   }
 
+
   const page =
     Number(
       callbackData.split(':')[1],
     );
+
 
   if (
     !Number.isInteger(page) ||
@@ -139,8 +204,10 @@ export async function handleTopAdminsCallback(
     return true;
   }
 
+
   const message =
     callbackQuery.message;
+
 
   if (!message) {
     await answerCallbackQuery(
@@ -151,6 +218,7 @@ export async function handleTopAdminsCallback(
     return true;
   }
 
+
   const result =
     await listAdmins(
       env.DB,
@@ -158,14 +226,23 @@ export async function handleTopAdminsCallback(
       10,
     );
 
+
+  const topAdminsMessage =
+    buildTopAdminsMessage(
+      result,
+    );
+
+
   await editMessageText(
     message.chat.id,
     message.message_id,
-    buildTopAdminsMessage(
-      result,
-    ),
+    topAdminsMessage.text,
     env,
     {
+      parse_mode: undefined,
+      entities:
+        topAdminsMessage.entities,
+
       reply_markup:
         getAdminsPaginationKeyboard(
           result.page,
@@ -174,10 +251,12 @@ export async function handleTopAdminsCallback(
     },
   );
 
+
   await answerCallbackQuery(
     callbackQuery.id,
     env,
   );
+
 
   return true;
 }
