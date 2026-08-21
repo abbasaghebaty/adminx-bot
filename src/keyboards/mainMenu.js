@@ -1,12 +1,10 @@
 export const MAIN_MENU_BUTTONS = Object.freeze({
   CHANNEL: '📢 کانال اصلی',
+  TOP_ADMINS: '✨ ادمین‌های برتر',
   TRUST: '🛡 اعتماد به AdminX',
   SUPPORT: '💬 پشتیبانی',
   ABOUT: '🏢 مجموعه AdminX',
   SUGGESTIONS: '📮 انتقادات و پیشنهادات',
-
-  ACTIVE_ADMINS: '👥 ادمین‌های فعال',
-  MANAGE_ADMINS: '👑 ادمین‌های برتر',
 });
 
 export function getMainMenuKeyboard() {
@@ -21,12 +19,8 @@ export function getMainMenuKeyboard() {
 
       [
         {
-          text: MAIN_MENU_BUTTONS.ACTIVE_ADMINS,
+          text: MAIN_MENU_BUTTONS.TOP_ADMINS,
           style: 'success',
-        },
-        {
-          text: MAIN_MENU_BUTTONS.MANAGE_ADMINS,
-          style: 'primary',
         },
       ],
 
@@ -57,5 +51,6 @@ export function getMainMenuKeyboard() {
     ],
 
     resize_keyboard: true,
+    is_persistent: false,
   };
 }
