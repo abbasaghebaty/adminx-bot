@@ -1,5 +1,6 @@
 import {
   sendMessage,
+  getChat,
   deleteMessages,
 } from '../api/telegram.js';
 
@@ -15,29 +16,48 @@ import {
   finishAdminSession,
 } from '../database/adminSessions.js';
 
+
 function escapeHtml(value) {
   return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+    .replaceAll(
+      '&',
+      '&amp;',
+    )
+    .replaceAll(
+      '<',
+      '&lt;',
+    )
+    .replaceAll(
+      '>',
+      '&gt;',
+    )
+    .replaceAll(
+      '"',
+      '&quot;',
+    )
+    .replaceAll(
+      "'",
+      '&#039;',
+    );
 }
+
 
 function parseAdminInput(text) {
   const trimmed =
     String(text ?? '').trim();
 
   const ids =
-    trimmed.match(/\b\d{5,20}\b/g) ?? [];
+    trimmed.match(
+      /\b\d{5,20}\b/g,
+    ) ?? [];
 
-  if (ids.length === 0) {
+  if (!ids.length) {
     return {
       ok: false,
       error:
         '❌ <b>آیدی عددی</b> را وارد نکردی.\n\n' +
         'مثال:\n' +
-        '<code>123456789</code>',
+        '<code>عباس عاقبتی 123456789</code>',
     };
   }
 
@@ -81,7 +101,9 @@ function parseAdminInput(text) {
     };
   }
 
-  if (displayName.length > 128) {
+  if (
+    displayName.length > 128
+  ) {
     return {
       ok: false,
       error:
@@ -96,6 +118,7 @@ function parseAdminInput(text) {
     displayName,
   };
 }
+
 
 async function deleteSessionMessages(
   env,
@@ -124,6 +147,7 @@ async function deleteSessionMessages(
   });
 }
 
+
 async function sendTemporaryError(
   message,
   env,
@@ -140,7 +164,11 @@ async function sendTemporaryError(
   const messageId =
     sent?.result?.message_id;
 
-  if (Number.isInteger(messageId)) {
+  if (
+    Number.isInteger(
+      messageId,
+    )
+  ) {
     await addSessionMessage(
       env.DB,
       telegramId,
@@ -148,6 +176,60 @@ async function sendTemporaryError(
     );
   }
 }
+
+
+async function validateTelegramUser(
+  telegramId,
+  env,
+) {
+  try {
+    const result =
+      await getChat(
+        telegramId,
+        env,
+      );
+
+    const chat =
+      result?.result;
+
+    if (!chat) {
+      return {
+        ok: false,
+        error:
+          '❌ Telegram اطلاعات این کاربر را برنگرداند.',
+      };
+    }
+
+    if (
+      chat.type !== 'private'
+    ) {
+      return {
+        ok: false,
+        error:
+          '❌ این آیدی مربوط به یک کاربر خصوصی نیست.',
+      };
+    }
+
+    return {
+      ok: true,
+      user: chat,
+    };
+  } catch (error) {
+    console.error(
+      'GET CHAT ERROR:',
+      error,
+    );
+
+    return {
+      ok: false,
+      error:
+        '❌ این کاربر هنوز با ربات تعامل نکرده است.\n\n' +
+        'ابتدا کاربر باید ربات را باز کند و <b>/start</b> بزند، ' +
+        'بعد دوباره او را به لیست ادمین‌های برتر اضافه کن.',
+    };
+  }
+}
+
 
 async function handleAdminRegistration(
   message,
@@ -192,12 +274,32 @@ async function handleAdminRegistration(
     return true;
   }
 
+
+  const target =
+    await validateTelegramUser(
+      parsed.telegramId,
+      env,
+    );
+
+  if (!target.ok) {
+    await sendTemporaryError(
+      message,
+      env,
+      telegramId,
+      target.error,
+    );
+
+    return true;
+  }
+
+
   const { existed } =
     await createAdmin(
       env.DB,
       parsed.telegramId,
       parsed.displayName,
     );
+
 
   const successText =
     existed
@@ -207,6 +309,7 @@ async function handleAdminRegistration(
       : `✅ <b>ادمین جدید ثبت شد</b>\n\n` +
         `👤 ${escapeHtml(parsed.displayName)}\n` +
         `🆔 <code>${parsed.telegramId}</code>`;
+
 
   const successMessage =
     await sendMessage(
@@ -218,11 +321,13 @@ async function handleAdminRegistration(
   const successMessageId =
     successMessage?.result?.message_id;
 
+
   await deleteSessionMessages(
     env,
     chatId,
     telegramId,
   );
+
 
   if (
     Number.isInteger(
@@ -230,30 +335,37 @@ async function handleAdminRegistration(
     )
   ) {
     ctx.waitUntil(
-      new Promise((resolve) => {
-        setTimeout(
-          async () => {
-            await deleteMessages(
-              chatId,
-              [successMessageId],
-              env,
-            ).catch((error) => {
-              console.error(
-                'SUCCESS MESSAGE DELETE ERROR:',
-                error,
+      new Promise(
+        (resolve) => {
+          setTimeout(
+            async () => {
+              await deleteMessages(
+                chatId,
+                [
+                  successMessageId,
+                ],
+                env,
+              ).catch(
+                (error) => {
+                  console.error(
+                    'SUCCESS MESSAGE DELETE ERROR:',
+                    error,
+                  );
+                },
               );
-            });
 
-            resolve();
-          },
-          10_000,
-        );
-      }),
+              resolve();
+            },
+            10_000,
+          );
+        },
+      ),
     );
   }
 
   return true;
 }
+
 
 export async function startAdminRegistration(
   message,
@@ -283,12 +395,14 @@ export async function startAdminRegistration(
       'اطلاعات ادمین را در قالب زیر ارسال کن:\n\n' +
       '<code>نام نمایشی آیدی عددی</code>\n\n' +
       'مثال:\n' +
-      '<code>عباس عاقبتی 123456789</code>',
+      '<code>عباس عاقبتی 123456789</code>\n\n' +
+      '⚠️ ادمین موردنظر باید ابتدا ربات را باز کند و <b>/start</b> بزند.',
     env,
   );
 
   return true;
 }
+
 
 export async function cancelAdminRegistration(
   message,
@@ -312,15 +426,20 @@ export async function cancelAdminRegistration(
 
   await deleteMessages(
     message.chat.id,
-    [message.message_id],
+    [
+      message.message_id,
+    ],
     env,
-  ).catch((error) => {
-    console.error(
-      'START MESSAGE CLEANUP ERROR:',
-      error,
-    );
-  });
+  ).catch(
+    (error) => {
+      console.error(
+        'START MESSAGE CLEANUP ERROR:',
+        error,
+      );
+    },
+  );
 }
+
 
 export async function handleAdminRegistrationMessage(
   message,
