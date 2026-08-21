@@ -4,38 +4,49 @@ import {
   sendMessage,
 } from '../api/telegram.js';
 
-import { listAdmins } from '../database/admins.js';
+import {
+  listAdmins,
+} from '../database/admins.js';
 
 import {
   getAdminsPaginationKeyboard,
 } from '../keyboards/adminsKeyboard.js';
 
 function escapeHtml(value) {
-  return String(value)
+  return String(value ?? '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
-function buildAdminsMessage(data) {
+function buildTopAdminsMessage(data) {
   if (!data.total) {
     return [
-      '<b>👥 ادمین‌های فعال</b>',
+      '<b>👑 ادمین‌های برتر</b>',
       '',
       'فعلاً ادمینی ثبت نشده است.',
     ].join('\n');
   }
 
-  const lines = data.admins.map((admin, index) => {
-    const number = String(
-      (data.page - 1) * 10 + index + 1,
-    ).padStart(2, '0');
+  const lines = data.admins.map(
+    (admin, index) => {
+      const number = String(
+        (data.page - 1) * 10 + index + 1,
+      ).padStart(2, '0');
 
-    return `${number}. <a href="tg://user?id=${admin.telegram_id}">${escapeHtml(admin.display_name)}</a>`;
-  });
+      return (
+        `${number}. ` +
+        `<a href="tg://user?id=${admin.telegram_id}">` +
+        `${escapeHtml(admin.display_name)}` +
+        `</a>`
+      );
+    },
+  );
 
   return [
-    '<b>👥 ادمین‌های فعال</b>',
+    '<b>👑 ادمین‌های برتر</b>',
     '',
     ...lines,
     '',
@@ -43,7 +54,7 @@ function buildAdminsMessage(data) {
   ].join('\n');
 }
 
-export async function sendActiveAdmins(
+export async function sendTopAdmins(
   chatId,
   env,
   page = 1,
@@ -56,7 +67,7 @@ export async function sendActiveAdmins(
 
   return sendMessage(
     chatId,
-    buildAdminsMessage(data),
+    buildTopAdminsMessage(data),
     env,
     {
       reply_markup:
@@ -68,13 +79,14 @@ export async function sendActiveAdmins(
   );
 }
 
-export async function handleAdminsCallback(
+export async function handleTopAdminsCallback(
   callbackQuery,
   env,
 ) {
-  const data = callbackQuery.data ?? '';
+  const data =
+    callbackQuery.data ?? '';
 
-  if (!data.startsWith('admins:')) {
+  if (!data.startsWith('top_admins:')) {
     return false;
   }
 
@@ -98,7 +110,8 @@ export async function handleAdminsCallback(
     return true;
   }
 
-  const message = callbackQuery.message;
+  const message =
+    callbackQuery.message;
 
   if (!message) {
     await answerCallbackQuery(
@@ -118,7 +131,7 @@ export async function handleAdminsCallback(
   await editMessageText(
     message.chat.id,
     message.message_id,
-    buildAdminsMessage(result),
+    buildTopAdminsMessage(result),
     env,
     {
       reply_markup:
@@ -135,4 +148,4 @@ export async function handleAdminsCallback(
   );
 
   return true;
-                                }
+}
