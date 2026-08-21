@@ -40,10 +40,8 @@ export async function handleMessage(
 
   /*
    * اگر کاربر در حالت مدیریت ادمین باشد،
-   * پیام او باید اول توسط سیستم مدیریت ادمین بررسی شود.
-   *
-   * تشخیص دسترسی فقط با آیدی عددی ثابت
-   * داخل admins.js انجام می‌شود.
+   * پیام فعلی باید قبل از هر منوی دیگری
+   * توسط سیستم ثبت ادمین بررسی شود.
    */
   const handledByAdminSession =
     await handleAdminRegistrationMessage(
@@ -59,11 +57,13 @@ export async function handleMessage(
   /*
    * ادمین‌های برتر
    *
-   * اگر کاربر یکی از ادمین‌های اصلی باشد:
-   * وارد حالت مدیریت و افزودن ادمین می‌شود.
+   * کاربر عادی:
+   * فقط لیست ادمین‌ها را می‌بیند.
    *
-   * اگر ادمین اصلی نباشد:
-   * فقط لیست ادمین‌های برتر نمایش داده می‌شود.
+   * ادمین اصلی:
+   * ابتدا لیست را می‌بیند،
+   * سپس حالت مدیریت ادمین برای او فعال می‌شود
+   * تا پیام بعدی را به‌عنوان اطلاعات ادمین دریافت کند.
    */
   if (
     text ===
@@ -75,6 +75,19 @@ export async function handleMessage(
         message.from.id,
       );
 
+    /*
+     * اول لیست ادمین‌ها را نمایش بده.
+     */
+    await sendTopAdmins(
+      chatId,
+      env,
+      1,
+    );
+
+    /*
+     * اگر ادمین اصلی است،
+     * بلافاصله بعد از لیست وارد حالت مدیریت شود.
+     */
     if (isAdmin) {
       const started =
         await startAdminRegistration(
@@ -85,20 +98,12 @@ export async function handleMessage(
       if (!started) {
         await sendMessage(
           chatId,
-          '❌ <b>خطا در ورود به مدیریت ادمین‌ها</b>\\n\\n' +
+          '❌ <b>خطا در ورود به مدیریت ادمین‌ها</b>\n\n' +
             'سیستم نتوانست حالت مدیریت ادمین را فعال کند.',
           env,
         );
       }
-
-      return;
     }
-
-    await sendTopAdmins(
-      chatId,
-      env,
-      1,
-    );
 
     return;
   }
@@ -106,8 +111,7 @@ export async function handleMessage(
   /*
    * دستور مستقیم مدیریت ادمین‌ها
    *
-   * این مسیر هم همچنان فقط برای
-   * دو آیدی اصلی مجاز است.
+   * فقط برای دو آیدی اصلی مجاز است.
    */
   if (
     text === '/manage_admins'
@@ -121,7 +125,7 @@ export async function handleMessage(
     if (!isAdmin) {
       await sendMessage(
         chatId,
-        '❌ <b>دسترسی غیرمجاز</b>\\n\\n' +
+        '❌ <b>دسترسی غیرمجاز</b>\n\n' +
           'شما دسترسی مدیریت ادمین‌ها را ندارید.',
         env,
       );
@@ -138,7 +142,7 @@ export async function handleMessage(
     if (!started) {
       await sendMessage(
         chatId,
-        '❌ <b>خطا در ورود به مدیریت ادمین‌ها</b>\\n\\n' +
+        '❌ <b>خطا در ورود به مدیریت ادمین‌ها</b>\n\n' +
           'سیستم نتوانست حالت مدیریت ادمین را فعال کند.',
         env,
       );
@@ -195,7 +199,7 @@ export async function handleMessage(
   ) {
     await sendMessage(
       chatId,
-      '💬 <b>پشتیبانی AdminX</b>\\n\\n' +
+      '💬 <b>پشتیبانی AdminX</b>\n\n' +
         'یکی از راه‌های ارتباطی زیر را انتخاب کنید:',
       env,
       {
@@ -244,7 +248,7 @@ export async function handleMessage(
   ) {
     await sendMessage(
       chatId,
-      '📮 <b>صندوق انتقادات و پیشنهادات</b>\\n\\n' +
+      '📮 <b>صندوق انتقادات و پیشنهادات</b>\n\n' +
         'برای ارسال نظر، پیشنهاد یا انتقاد خود وارد صندوق زیر شوید.',
       env,
       {
@@ -261,4 +265,4 @@ export async function handleMessage(
       },
     );
   }
-}
+            }
