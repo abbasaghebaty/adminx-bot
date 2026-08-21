@@ -12,8 +12,7 @@ export async function isBotAdmin(
     String(telegramId);
 
   /*
-   * Primary admin check:
-   * Hard-coded master admin IDs.
+   * Master admin IDs
    */
   if (
     CONFIGURED_ADMIN_IDS.has(
@@ -24,8 +23,8 @@ export async function isBotAdmin(
   }
 
   /*
-   * Secondary admin check:
-   * Existing admins stored in D1.
+   * Fallback:
+   * admins stored in D1 users table
    */
   if (!db) {
     return false;
