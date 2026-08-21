@@ -1,7 +1,7 @@
 import {
   answerCallbackQuery,
   editMessageText,
-  sendMessage,
+  sendRichMessage,
 } from '../api/telegram.js';
 
 import {
@@ -13,117 +13,97 @@ import {
 } from '../keyboards/adminsKeyboard.js';
 
 
-function utf16Length(value) {
-  return [...String(value ?? '')]
-    .reduce(
-      (length, character) =>
-        length +
-        (character.codePointAt(0) > 0xffff
-          ? 2
-          : 1),
-      0,
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll(
+      '&',
+      '&amp;',
+    )
+    .replaceAll(
+      '<',
+      '&lt;',
+    )
+    .replaceAll(
+      '>',
+      '&gt;',
+    )
+    .replaceAll(
+      '"',
+      '&quot;',
+    )
+    .replaceAll(
+      "'",
+      '&#039;',
     );
 }
 
 
-function buildTopAdminsMessage(data) {
+function buildTopAdminsRichHtml(
+  data,
+) {
   if (!data.total) {
-    return {
-      text: [
-        '👑 ادمین‌های برتر',
-        '',
-        'فعلاً ادمینی ثبت نشده است.',
-      ].join('\n'),
-
-      entities: [
-        {
-          type: 'bold',
-          offset: 0,
-          length: utf16Length(
-            '👑 ادمین‌های برتر',
-          ),
-        },
-      ],
-    };
+    return [
+      '<b>👑 ادمین‌های برتر</b>',
+      '',
+      'فعلاً ادمینی ثبت نشده است.',
+    ].join('\n');
   }
 
 
   const lines = [
-    '👑 ادمین‌های برتر',
+    '<b>👑 ادمین‌های برتر</b>',
     '',
   ];
 
-  const entities = [
-    {
-      type: 'bold',
-      offset: 0,
-      length: utf16Length(
-        '👑 ادمین‌های برتر',
-      ),
-    },
-  ];
 
-
-  for (const admin of data.admins) {
-    const displayName =
-      String(
-        admin?.display_name ??
-          'بدون نام',
-      ).trim() || 'بدون نام';
-
+  for (
+    const admin of data.admins
+  ) {
     const telegramId =
       String(
-        admin?.telegram_id ??
-          '',
+        admin?.telegram_id ?? '',
       ).trim();
 
 
-    const line =
-      telegramId
-        ? `🆔 ${displayName}`
-        : displayName;
-
-
-    const currentText =
-      lines.join('\n');
-
-    const prefix =
-      currentText.length === 0
-        ? ''
-        : '\n';
-
-
-    const offset =
-      utf16Length(
-        currentText + prefix,
+    const displayName =
+      escapeHtml(
+        String(
+          admin?.display_name ??
+            'بدون نام',
+        ).trim() ||
+          'بدون نام',
       );
 
 
-    lines.push(line);
+    if (!telegramId) {
+      lines.push(
+        displayName,
+      );
 
-
-    if (telegramId) {
-      entities.push({
-        type: 'text_mention',
-        offset:
-          offset +
-          utf16Length('🆔 '),
-        length:
-          utf16Length(displayName),
-
-        user: {
-          id: Number(telegramId),
-          is_bot: false,
-          first_name: displayName,
-        },
-      });
+      continue;
     }
+
+
+    lines.push(
+      `🆔 <a href="tg://user?id=${telegramId}">${displayName}</a>`,
+    );
   }
 
 
+  return lines.join('\n');
+}
+
+
+function buildTopAdminsRichMessage(
+  data,
+) {
   return {
-    text: lines.join('\n'),
-    entities,
+    html:
+      buildTopAdminsRichHtml(
+        data,
+      ),
+
+    is_rtl: true,
   };
 }
 
@@ -141,19 +121,13 @@ export async function sendTopAdmins(
     );
 
 
-  const message =
-    buildTopAdminsMessage(data);
-
-
-  return sendMessage(
+  return sendRichMessage(
     chatId,
-    message.text,
+    buildTopAdminsRichMessage(
+      data,
+    ),
     env,
     {
-      parse_mode: undefined,
-      entities:
-        message.entities,
-
       reply_markup:
         getAdminsPaginationKeyboard(
           data.page,
@@ -197,7 +171,8 @@ export async function handleTopAdminsCallback(
       {
         text:
           'صفحه نامعتبر است.',
-        show_alert: true,
+        show_alert:
+          true,
       },
     );
 
@@ -227,21 +202,16 @@ export async function handleTopAdminsCallback(
     );
 
 
-  const topAdminsMessage =
-    buildTopAdminsMessage(
-      result,
-    );
-
-
   await editMessageText(
     message.chat.id,
     message.message_id,
-    topAdminsMessage.text,
+    null,
     env,
     {
-      parse_mode: undefined,
-      entities:
-        topAdminsMessage.entities,
+      rich_message:
+        buildTopAdminsRichMessage(
+          result,
+        ),
 
       reply_markup:
         getAdminsPaginationKeyboard(
