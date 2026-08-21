@@ -25,8 +25,7 @@ function escapeHtml(value) {
 }
 
 function parseAdminInput(text) {
-  const trimmed =
-    String(text ?? '').trim();
+  const trimmed = String(text ?? '').trim();
 
   const ids =
     trimmed.match(/\b\d{5,20}\b/g) ?? [];
@@ -50,8 +49,7 @@ function parseAdminInput(text) {
     };
   }
 
-  const telegramId =
-    Number(ids[0]);
+  const telegramId = Number(ids[0]);
 
   if (!Number.isSafeInteger(telegramId)) {
     return {
@@ -61,11 +59,10 @@ function parseAdminInput(text) {
     };
   }
 
-  const displayName =
-    trimmed
-      .replace(ids[0], '')
-      .replace(/\s+/g, ' ')
-      .trim();
+  const displayName = trimmed
+    .replace(ids[0], '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
   if (!displayName) {
     return {
@@ -126,12 +123,11 @@ async function sendTemporaryError(
   telegramId,
   text,
 ) {
-  const sent =
-    await sendMessage(
-      message.chat.id,
-      text,
-      env,
-    );
+  const sent = await sendMessage(
+    message.chat.id,
+    text,
+    env,
+  );
 
   const messageId =
     sent?.result?.message_id;
@@ -150,11 +146,8 @@ async function handleAdminRegistration(
   env,
   ctx,
 ) {
-  const telegramId =
-    message.from.id;
-
-  const chatId =
-    message.chat.id;
+  const telegramId = message.from.id;
+  const chatId = message.chat.id;
 
   const session =
     await getAdminSession(
@@ -173,9 +166,7 @@ async function handleAdminRegistration(
   );
 
   const parsed =
-    parseAdminInput(
-      message.text,
-    );
+    parseAdminInput(message.text);
 
   if (!parsed.ok) {
     await sendTemporaryError(
@@ -195,23 +186,19 @@ async function handleAdminRegistration(
       parsed.displayName,
     );
 
-  const successText =
-    existed
-      ? `✅ <b>اطلاعات ادمین به‌روزرسانی شد</b>\n\n` +
-        `👤 ${escapeHtml(parsed.displayName)}\n` +
-        `🆔 <code>${parsed.telegramId}</code>`
-      : `✅ <b>ادمین جدید ثبت شد</b>\n\n` +
-        `👤 ${escapeHtml(parsed.displayName)}\n` +
-        `🆔 <code>${parsed.telegramId}</code>`;
+  const successText = existed
+    ? `✅ <b>اطلاعات ادمین به‌روزرسانی شد</b>\n\n` +
+      `👤 ${escapeHtml(parsed.displayName)}\n` +
+      `🆔 <code>${parsed.telegramId}</code>`
+    : `✅ <b>ادمین جدید ثبت شد</b>\n\n` +
+      `👤 ${escapeHtml(parsed.displayName)}\n` +
+      `🆔 <code>${parsed.telegramId}</code>`;
 
   const successMessage =
     await sendMessage(
       chatId,
       successText,
       env,
-      {
-        disable_notification: false,
-      },
     );
 
   const successMessageId =
@@ -223,11 +210,7 @@ async function handleAdminRegistration(
     telegramId,
   );
 
-  if (
-    Number.isInteger(
-      successMessageId,
-    )
-  ) {
+  if (Number.isInteger(successMessageId)) {
     ctx.waitUntil(
       new Promise((resolve) => {
         setTimeout(async () => {
@@ -255,13 +238,13 @@ export async function startAdminRegistration(
   message,
   env,
 ) {
-  const telegramId =
-    message.from.id;
+  const telegramId = message.from.id;
 
   if (
     !(await isBotAdmin(
       env.DB,
       telegramId,
+      env,
     ))
   ) {
     return false;
@@ -330,6 +313,7 @@ export async function handleAdminRegistrationMessage(
     !(await isBotAdmin(
       env.DB,
       message.from.id,
+      env,
     ))
   ) {
     return false;
@@ -340,4 +324,4 @@ export async function handleAdminRegistrationMessage(
     env,
     ctx,
   );
-}
+  }
