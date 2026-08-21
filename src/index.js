@@ -1,8 +1,13 @@
-import { handleStart } from './handlers/startHandler.js';
-import { handleMessage } from './handlers/messageHandler.js';
+import {
+  handleStart,
+} from './handlers/startHandler.js';
 
 import {
-  handleAdminsCallback,
+  handleMessage,
+} from './handlers/messageHandler.js';
+
+import {
+  handleTopAdminsCallback,
 } from './handlers/activeAdminsHandler.js';
 
 export default {
@@ -26,22 +31,39 @@ export default {
       const update =
         await request.json();
 
-      if (update.callback_query) {
-        await handleAdminsCallback(
+      /*
+       * Callback queries
+       */
+      if (
+        update.callback_query
+      ) {
+        await handleTopAdminsCallback(
           update.callback_query,
           env,
         );
 
-        return new Response('OK');
+        return new Response(
+          'OK',
+        );
       }
 
-      if (!update.message) {
-        return new Response('OK');
+      /*
+       * فقط message های معتبر
+       */
+      if (
+        !update.message
+      ) {
+        return new Response(
+          'OK',
+        );
       }
 
       const message =
         update.message;
 
+      /*
+       * /start
+       */
       if (
         message.text === '/start'
       ) {
@@ -49,7 +71,12 @@ export default {
           message,
           env,
         );
-      } else if (
+      }
+
+      /*
+       * سایر پیام‌های متنی
+       */
+      else if (
         message.text
       ) {
         await handleMessage(
@@ -59,7 +86,9 @@ export default {
         );
       }
 
-      return new Response('OK');
+      return new Response(
+        'OK',
+      );
     } catch (error) {
       console.error(
         'BOT ERROR:',
