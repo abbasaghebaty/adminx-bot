@@ -1,14 +1,72 @@
 import { sendMessage } from '../api/telegram.js';
-import { getMainMenuKeyboard, MAIN_MENU_BUTTONS } from '../keyboards/mainMenu.js';
+
+import {
+  getMainMenuKeyboard,
+  MAIN_MENU_BUTTONS,
+} from '../keyboards/mainMenu.js';
+
 import { LINKS } from '../config/links.js';
+
 import { TRUST_MESSAGE } from '../messages/trust.js';
 import { ABOUT_MESSAGE } from '../messages/about.js';
 
-export async function handleMessage(message, env) {
+import {
+  handleAdminRegistrationMessage,
+  startAdminRegistration,
+} from './adminHandler.js';
+
+import {
+  sendActiveAdmins,
+} from './activeAdminsHandler.js';
+
+export async function handleMessage(
+  message,
+  env,
+  ctx,
+) {
   const text = message.text;
   const chatId = message.chat.id;
 
-  if (text === MAIN_MENU_BUTTONS.CHANNEL) {
+  const handledByAdminSession =
+    await handleAdminRegistrationMessage(
+      message,
+      env,
+      ctx,
+    );
+
+  if (handledByAdminSession) {
+    return;
+  }
+
+  if (
+    text ===
+    MAIN_MENU_BUTTONS.ACTIVE_ADMINS
+  ) {
+    await sendActiveAdmins(
+      chatId,
+      env,
+      1,
+    );
+
+    return;
+  }
+
+  if (
+    text ===
+    MAIN_MENU_BUTTONS.MANAGE_ADMINS
+  ) {
+    await startAdminRegistration(
+      message,
+      env,
+    );
+
+    return;
+  }
+
+  if (
+    text ===
+    MAIN_MENU_BUTTONS.CHANNEL
+  ) {
     await sendMessage(
       chatId,
       '📢 کانال اصلی AdminX:',
@@ -26,20 +84,35 @@ export async function handleMessage(message, env) {
         },
       },
     );
+
     return;
   }
 
-  if (text === MAIN_MENU_BUTTONS.TRUST) {
-    await sendMessage(chatId, TRUST_MESSAGE, env, {
-      reply_markup: getMainMenuKeyboard(),
-    });
-    return;
-  }
-
-  if (text === MAIN_MENU_BUTTONS.SUPPORT) {
+  if (
+    text ===
+    MAIN_MENU_BUTTONS.TRUST
+  ) {
     await sendMessage(
       chatId,
-      '💬 <b>پشتیبانی AdminX</b>\n\nیکی از راه‌های ارتباطی زیر را انتخاب کنید:',
+      TRUST_MESSAGE,
+      env,
+      {
+        reply_markup:
+          getMainMenuKeyboard(),
+      },
+    );
+
+    return;
+  }
+
+  if (
+    text ===
+    MAIN_MENU_BUTTONS.SUPPORT
+  ) {
+    await sendMessage(
+      chatId,
+      '💬 <b>پشتیبانی AdminX</b>\n\n' +
+        'یکی از راه‌های ارتباطی زیر را انتخاب کنید:',
       env,
       {
         reply_markup: {
@@ -60,20 +133,35 @@ export async function handleMessage(message, env) {
         },
       },
     );
+
     return;
   }
 
-  if (text === MAIN_MENU_BUTTONS.ABOUT) {
-    await sendMessage(chatId, ABOUT_MESSAGE, env, {
-      reply_markup: getMainMenuKeyboard(),
-    });
-    return;
-  }
-
-  if (text === MAIN_MENU_BUTTONS.SUGGESTIONS) {
+  if (
+    text ===
+    MAIN_MENU_BUTTONS.ABOUT
+  ) {
     await sendMessage(
       chatId,
-      '📮 <b>صندوق انتقادات و پیشنهادات</b>\n\nبرای ارسال نظر، پیشنهاد یا انتقاد خود وارد صندوق زیر شوید.',
+      ABOUT_MESSAGE,
+      env,
+      {
+        reply_markup:
+          getMainMenuKeyboard(),
+      },
+    );
+
+    return;
+  }
+
+  if (
+    text ===
+    MAIN_MENU_BUTTONS.SUGGESTIONS
+  ) {
+    await sendMessage(
+      chatId,
+      '📮 <b>صندوق انتقادات و پیشنهادات</b>\n\n' +
+        'برای ارسال نظر، پیشنهاد یا انتقاد خود وارد صندوق زیر شوید.',
       env,
       {
         reply_markup: {
