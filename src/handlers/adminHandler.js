@@ -16,14 +16,17 @@ import {
 } from '../database/adminSessions.js';
 
 function escapeHtml(value) {
-  return String(value)
+  return String(value ?? '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 function parseAdminInput(text) {
-  const trimmed = String(text ?? '').trim();
+  const trimmed =
+    String(text ?? '').trim();
 
   const ids =
     trimmed.match(/\b\d{5,20}\b/g) ?? [];
@@ -47,7 +50,8 @@ function parseAdminInput(text) {
     };
   }
 
-  const telegramId = Number(ids[0]);
+  const telegramId =
+    Number(ids[0]);
 
   if (!Number.isSafeInteger(telegramId)) {
     return {
@@ -57,10 +61,11 @@ function parseAdminInput(text) {
     };
   }
 
-  const displayName = trimmed
-    .replace(ids[0], '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const displayName =
+    trimmed
+      .replace(ids[0], '')
+      .replace(/\s+/g, ' ')
+      .trim();
 
   if (!displayName) {
     return {
@@ -121,11 +126,12 @@ async function sendTemporaryError(
   telegramId,
   text,
 ) {
-  const sent = await sendMessage(
-    message.chat.id,
-    text,
-    env,
-  );
+  const sent =
+    await sendMessage(
+      message.chat.id,
+      text,
+      env,
+    );
 
   const messageId =
     sent?.result?.message_id;
@@ -144,8 +150,11 @@ async function handleAdminRegistration(
   env,
   ctx,
 ) {
-  const telegramId = message.from.id;
-  const chatId = message.chat.id;
+  const telegramId =
+    message.from.id;
+
+  const chatId =
+    message.chat.id;
 
   const session =
     await getAdminSession(
@@ -164,7 +173,9 @@ async function handleAdminRegistration(
   );
 
   const parsed =
-    parseAdminInput(message.text);
+    parseAdminInput(
+      message.text,
+    );
 
   if (!parsed.ok) {
     await sendTemporaryError(
@@ -184,13 +195,14 @@ async function handleAdminRegistration(
       parsed.displayName,
     );
 
-  const successText = existed
-    ? `✅ <b>اطلاعات ادمین به‌روزرسانی شد</b>\n\n` +
-      `👤 ${escapeHtml(parsed.displayName)}\n` +
-      `🆔 <code>${parsed.telegramId}</code>`
-    : `✅ <b>ادمین جدید ثبت شد</b>\n\n` +
-      `👤 ${escapeHtml(parsed.displayName)}\n` +
-      `🆔 <code>${parsed.telegramId}</code>`;
+  const successText =
+    existed
+      ? `✅ <b>اطلاعات ادمین به‌روزرسانی شد</b>\n\n` +
+        `👤 ${escapeHtml(parsed.displayName)}\n` +
+        `🆔 <code>${parsed.telegramId}</code>`
+      : `✅ <b>ادمین جدید ثبت شد</b>\n\n` +
+        `👤 ${escapeHtml(parsed.displayName)}\n` +
+        `🆔 <code>${parsed.telegramId}</code>`;
 
   const successMessage =
     await sendMessage(
@@ -212,7 +224,9 @@ async function handleAdminRegistration(
   );
 
   if (
-    Number.isInteger(successMessageId)
+    Number.isInteger(
+      successMessageId,
+    )
   ) {
     ctx.waitUntil(
       new Promise((resolve) => {
@@ -241,10 +255,13 @@ export async function startAdminRegistration(
   message,
   env,
 ) {
+  const telegramId =
+    message.from.id;
+
   if (
     !(await isBotAdmin(
       env.DB,
-      message.from.id,
+      telegramId,
     ))
   ) {
     return false;
@@ -252,7 +269,17 @@ export async function startAdminRegistration(
 
   await startAdminSession(
     env.DB,
-    message.from.id,
+    telegramId,
+  );
+
+  await sendMessage(
+    message.chat.id,
+    '👑 <b>مدیریت ادمین‌های برتر</b>\n\n' +
+      'اطلاعات ادمین را در قالب زیر ارسال کن:\n\n' +
+      '<code>نام نمایشی آیدی عددی</code>\n\n' +
+      'مثال:\n' +
+      '<code>عباس عاقبتی 123456789</code>',
+    env,
   );
 
   return true;
