@@ -21,7 +21,34 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
-function buildTopAdminsMessage(data) {
+function buildAdminMention(
+  admin,
+) {
+  const telegramId =
+    String(
+      admin?.telegram_id ?? '',
+    ).trim();
+
+  const displayName =
+    escapeHtml(
+      admin?.display_name ??
+        'بدون نام',
+    );
+
+  if (!telegramId) {
+    return displayName;
+  }
+
+  return (
+    `<a href="tg://user?id=${encodeURIComponent(telegramId)}">` +
+    `${displayName}` +
+    `</a>`
+  );
+}
+
+function buildTopAdminsMessage(
+  data,
+) {
   if (!data.total) {
     return [
       '<b>👑 ادمین‌های برتر</b>',
@@ -30,20 +57,23 @@ function buildTopAdminsMessage(data) {
     ].join('\n');
   }
 
-  const lines = data.admins.map(
-    (admin, index) => {
-      const number = String(
-        (data.page - 1) * 10 + index + 1,
-      ).padStart(2, '0');
+  const lines =
+    data.admins.map(
+      (admin, index) => {
+        const number =
+          String(
+            (data.page - 1) *
+              10 +
+              index +
+              1,
+          ).padStart(2, '0');
 
-      return (
-        `${number}. ` +
-        `<a href="tg://user?id=${admin.telegram_id}">` +
-        `${escapeHtml(admin.display_name)}` +
-        `</a>`
-      );
-    },
-  );
+        return (
+          `${number}. ` +
+          buildAdminMention(admin)
+        );
+      },
+    );
 
   return [
     '<b>👑 ادمین‌های برتر</b>',
@@ -59,11 +89,12 @@ export async function sendTopAdmins(
   env,
   page = 1,
 ) {
-  const data = await listAdmins(
-    env.DB,
-    page,
-    10,
-  );
+  const data =
+    await listAdmins(
+      env.DB,
+      page,
+      10,
+    );
 
   return sendMessage(
     chatId,
@@ -86,13 +117,18 @@ export async function handleTopAdminsCallback(
   const data =
     callbackQuery.data ?? '';
 
-  if (!data.startsWith('top_admins:')) {
+  if (
+    !data.startsWith(
+      'top_admins:',
+    )
+  ) {
     return false;
   }
 
-  const page = Number(
-    data.split(':')[1],
-  );
+  const page =
+    Number(
+      data.split(':')[1],
+    );
 
   if (
     !Number.isInteger(page) ||
@@ -102,7 +138,8 @@ export async function handleTopAdminsCallback(
       callbackQuery.id,
       env,
       {
-        text: 'صفحه نامعتبر است.',
+        text:
+          'صفحه نامعتبر است.',
         show_alert: true,
       },
     );
@@ -122,16 +159,19 @@ export async function handleTopAdminsCallback(
     return true;
   }
 
-  const result = await listAdmins(
-    env.DB,
-    page,
-    10,
-  );
+  const result =
+    await listAdmins(
+      env.DB,
+      page,
+      10,
+    );
 
   await editMessageText(
     message.chat.id,
     message.message_id,
-    buildTopAdminsMessage(result),
+    buildTopAdminsMessage(
+      result,
+    ),
     env,
     {
       reply_markup:
