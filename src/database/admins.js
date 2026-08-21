@@ -1,7 +1,41 @@
+function getConfiguredAdminIds(env) {
+  const raw = String(env.ADMIN_IDS ?? '');
+
+  return new Set(
+    raw
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean),
+  );
+}
+
 export async function isBotAdmin(
   db,
   telegramId,
+  env,
 ) {
+  const numericTelegramId =
+    String(telegramId);
+
+  /*
+   * Primary admin check:
+   * Cloudflare Worker Secret → ADMIN_IDS
+   */
+  const configuredAdminIds =
+    getConfiguredAdminIds(env);
+
+  if (
+    configuredAdminIds.has(
+      numericTelegramId,
+    )
+  ) {
+    return true;
+  }
+
+  /*
+   * Fallback:
+   * Existing admins stored in D1.
+   */
   const row = await db
     .prepare(
       `
