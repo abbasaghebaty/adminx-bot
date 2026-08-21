@@ -7,11 +7,12 @@
  * مسئول:
  * - ارتباط با Telegram Bot API
  * - ارسال درخواست
- * - ارسال پیام
+ * - ارسال پیام معمولی
+ * - ارسال Rich Message
+ * - دریافت اطلاعات چت/کاربر
  * - حذف پیام
  * - Callback Query
  * - ویرایش پیام
- * - Rich Messages
  */
 
 const TELEGRAM_API =
@@ -32,20 +33,21 @@ async function telegramRequest(
   const url =
     `${TELEGRAM_API}/bot${env.BOT_TOKEN}/${method}`;
 
-  const response = await fetch(
-    url,
-    {
-      method: 'POST',
+  const response =
+    await fetch(
+      url,
+      {
+        method: 'POST',
 
-      headers: {
-        'Content-Type':
-          'application/json',
+        headers: {
+          'Content-Type':
+            'application/json',
+        },
+
+        body:
+          JSON.stringify(payload),
       },
-
-      body:
-        JSON.stringify(payload),
-    },
-  );
+    );
 
   const data =
     await response.json();
@@ -107,6 +109,20 @@ export async function sendRichMessage(
 }
 
 
+export async function getChat(
+  chatId,
+  env,
+) {
+  return telegramRequest(
+    'getChat',
+    {
+      chat_id: chatId,
+    },
+    env,
+  );
+}
+
+
 export async function deleteMessage(
   chatId,
   messageId,
@@ -154,7 +170,8 @@ export async function deleteMessages(
         'deleteMessages',
         {
           chat_id: chatId,
-          message_ids: chunk,
+          message_ids:
+            chunk,
         },
         env,
       ),
@@ -207,8 +224,6 @@ export async function editMessageText(
     payload.text = text;
     payload.parse_mode = 'HTML';
   }
-
-  delete payload.rich_message_placeholder;
 
   return telegramRequest(
     'editMessageText',
