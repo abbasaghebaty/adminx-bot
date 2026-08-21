@@ -16,16 +16,27 @@ import {
 } from './adminHandler.js';
 
 import {
-  sendActiveAdmins,
+  sendTopAdmins,
 } from './activeAdminsHandler.js';
+
+import {
+  isBotAdmin,
+} from '../database/admins.js';
 
 export async function handleMessage(
   message,
   env,
   ctx,
 ) {
-  const text = message.text;
-  const chatId = message.chat.id;
+  const text =
+    message.text?.trim();
+
+  const chatId =
+    message.chat.id;
+
+  if (!text) {
+    return;
+  }
 
   const handledByAdminSession =
     await handleAdminRegistrationMessage(
@@ -40,9 +51,9 @@ export async function handleMessage(
 
   if (
     text ===
-    MAIN_MENU_BUTTONS.ACTIVE_ADMINS
+    MAIN_MENU_BUTTONS.TOP_ADMINS
   ) {
-    await sendActiveAdmins(
+    await sendTopAdmins(
       chatId,
       env,
       1,
@@ -51,10 +62,25 @@ export async function handleMessage(
     return;
   }
 
+  /*
+   * مدیریت ادمین‌ها
+   * فقط برای Bot Admin
+   *
+   * این قابلیت عمداً از منوی عمومی حذف شده.
+   */
   if (
-    text ===
-    MAIN_MENU_BUTTONS.MANAGE_ADMINS
+    text === '/manage_admins'
   ) {
+    const isAdmin =
+      await isBotAdmin(
+        env.DB,
+        message.from.id,
+      );
+
+    if (!isAdmin) {
+      return;
+    }
+
     await startAdminRegistration(
       message,
       env,
