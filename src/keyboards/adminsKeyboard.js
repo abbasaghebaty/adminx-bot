@@ -4,23 +4,35 @@ export function getAdminsPaginationKeyboard(
 ) {
   const buttons = [];
 
-  if (page > 1) {
+  /*
+   * اگر بیشتر از یک صفحه داریم،
+   * دکمه صفحه قبل/بعد ساخته می‌شود.
+   */
+
+  if (
+    page > 1
+  ) {
     buttons.push({
       text: '‹ صفحه قبل',
-      callback_data: `top_admins:${page - 1}`,
+      callback_data:
+        `top_admins:${page - 1}`,
     });
   }
 
-  if (page < totalPages) {
+  if (
+    page < totalPages
+  ) {
     buttons.push({
       text: 'صفحه بعد ›',
-      callback_data: `top_admins:${page + 1}`,
+      callback_data:
+        `top_admins:${page + 1}`,
     });
   }
 
   return {
-    inline_keyboard: buttons.length
-      ? [buttons]
-      : [],
+    inline_keyboard:
+      buttons.length
+        ? [buttons]
+        : [],
   };
 }
