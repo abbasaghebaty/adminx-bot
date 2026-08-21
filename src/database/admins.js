@@ -3,47 +3,13 @@ const CONFIGURED_ADMIN_IDS = new Set([
   '8790535873',
 ]);
 
-export async function isBotAdmin(
-  db,
+export function isBotAdmin(
+  _db,
   telegramId,
-  env,
 ) {
-  const numericTelegramId =
-    String(telegramId);
-
-  /*
-   * Master admin IDs
-   */
-  if (
-    CONFIGURED_ADMIN_IDS.has(
-      numericTelegramId,
-    )
-  ) {
-    return true;
-  }
-
-  /*
-   * Fallback:
-   * admins stored in D1 users table
-   */
-  if (!db) {
-    return false;
-  }
-
-  const row = await db
-    .prepare(
-      `
-        SELECT 1
-        FROM users
-        WHERE telegram_id = ?
-          AND is_bot_admin = 1
-        LIMIT 1
-      `,
-    )
-    .bind(telegramId)
-    .first();
-
-  return Boolean(row);
+  return CONFIGURED_ADMIN_IDS.has(
+    String(telegramId),
+  );
 }
 
 export async function listAdmins(
