@@ -38,15 +38,17 @@ function escapeHtml(value) {
 }
 
 
-function buildTopAdminsRichHtml(
+function buildTopAdminsRichMessage(
   data,
 ) {
   if (!data.total) {
-    return [
-      '<b>👑 ادمین‌های برتر</b>',
-      '',
-      'فعلاً ادمینی ثبت نشده است.',
-    ].join('\n');
+    return {
+      html:
+        '<b>👑 ادمین‌های برتر</b>\n\n' +
+        'فعلاً ادمینی ثبت نشده است.',
+
+      is_rtl: true,
+    };
   }
 
 
@@ -61,7 +63,8 @@ function buildTopAdminsRichHtml(
   ) {
     const telegramId =
       String(
-        admin?.telegram_id ?? '',
+        admin?.telegram_id ??
+          '',
       ).trim();
 
 
@@ -77,31 +80,33 @@ function buildTopAdminsRichHtml(
 
     if (!telegramId) {
       lines.push(
-        displayName,
+        `🆔 ${displayName}`,
       );
 
       continue;
     }
 
 
+    /*
+     * Telegram Bot API 10.1+
+     *
+     * Rich HTML:
+     * tg://user?id=...
+     * به‌عنوان inline mention
+     * رندر می‌شود.
+     *
+     * عمداً فقط خود نام داخل
+     * تگ <a> قرار گرفته است.
+     */
     lines.push(
       `🆔 <a href="tg://user?id=${telegramId}">${displayName}</a>`,
     );
   }
 
 
-  return lines.join('\n');
-}
-
-
-function buildTopAdminsRichMessage(
-  data,
-) {
   return {
     html:
-      buildTopAdminsRichHtml(
-        data,
-      ),
+      lines.join('\n'),
 
     is_rtl: true,
   };
