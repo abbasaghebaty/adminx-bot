@@ -23,12 +23,12 @@ export function getMainMenuKeyboard() {
           style: 'primary',
         },
         {
-          text: MAIN_MENU_BUTTONS.ABOUT,
-          style: 'primary',
-        },
-        {
           text: MAIN_MENU_BUTTONS.TRUST,
           style: 'success',
+        },
+        {
+          text: MAIN_MENU_BUTTONS.ABOUT,
+          style: 'primary',
         },
       ],
 
