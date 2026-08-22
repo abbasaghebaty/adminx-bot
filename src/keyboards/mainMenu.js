@@ -12,6 +12,10 @@ export function getMainMenuKeyboard() {
     keyboard: [
       [
         {
+          text: MAIN_MENU_BUTTONS.TRUST,
+          style: 'success',
+        },
+        {
           text: MAIN_MENU_BUTTONS.CHANNEL,
           style: 'primary',
         },
@@ -20,32 +24,25 @@ export function getMainMenuKeyboard() {
       [
         {
           text: MAIN_MENU_BUTTONS.TOP_ADMINS,
-          style: 'primary',
-        },
-      ],
-
-      [
-        {
-          text: MAIN_MENU_BUTTONS.TRUST,
           style: 'success',
-        },
-        {
-          text: MAIN_MENU_BUTTONS.ABOUT,
-          style: 'primary',
         },
       ],
 
       [
         {
           text: MAIN_MENU_BUTTONS.SUPPORT,
-          style: 'primary',
+          style: 'danger',
+        },
+        {
+          text: MAIN_MENU_BUTTONS.SUGGESTIONS,
+          style: 'danger',
         },
       ],
 
       [
         {
-          text: MAIN_MENU_BUTTONS.SUGGESTIONS,
-          style: 'danger',
+          text: MAIN_MENU_BUTTONS.ABOUT,
+          style: 'primary',
         },
       ],
     ],
