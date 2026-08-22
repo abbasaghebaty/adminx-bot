@@ -391,7 +391,7 @@ export async function startAdminRegistration(
 
   await sendMessage(
     message.chat.id,
-    '👑 <b>مدیریت ادمین‌های برتر</b>\n\n' +
+    '✨ <b>مدیریت ادمین‌های برتر</b>\n\n' +
       'اطلاعات ادمین را در قالب زیر ارسال کن:\n\n' +
       '<code>نام نمایشی آیدی عددی</code>\n\n' +
       'مثال:\n' +
