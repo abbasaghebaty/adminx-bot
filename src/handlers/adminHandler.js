@@ -46,6 +46,9 @@ function parseAdminInput(text) {
   const trimmed =
     String(text ?? '').trim();
 
+  /*
+   * پیدا کردن آیدی عددی
+   */
   const ids =
     trimmed.match(
       /\b\d{5,20}\b/g,
@@ -85,11 +88,47 @@ function parseAdminInput(text) {
     };
   }
 
+  /*
+   * فقط کلمات فارسی را از متن استخراج می‌کنیم.
+   *
+   * نتیجه:
+   * User id: 7548075013 عباس عاقبتی
+   * تبدیل می‌شود به:
+   * عباس عاقبتی
+   *
+   * متن انگلیسی، عدد، بک‌تیک و علائم نادیده گرفته می‌شوند.
+   */
+  const persianWords =
+    trimmed.match(
+      /[اآبپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی‌]+/g,
+    ) ?? [];
+
+  if (!persianWords.length) {
+    return {
+      ok: false,
+      error:
+        '❌ <b>نام فارسی</b> را وارد نکردی.\n\n' +
+        'نام باید به فارسی باشد.\n\n' +
+        'مثال:\n' +
+        '<code>عباس عاقبتی 123456789</code>',
+    };
+  }
+
+  /*
+   * اسم حداکثر دو کلمه باشد.
+   */
+  if (persianWords.length > 2) {
+    return {
+      ok: false,
+      error:
+        '❌ نام ادمین باید حداکثر <b>دو کلمه</b> باشد.\n\n' +
+        'مثال صحیح:\n' +
+        '<code>عباس عاقبتی 123456789</code>',
+    };
+  }
+
   const displayName =
-    trimmed
-      .replace(ids[0], '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    persianWords.join(' ').trim();
 
   if (!displayName) {
     return {
@@ -98,17 +137,6 @@ function parseAdminInput(text) {
         '❌ <b>نام نمایشی</b> را وارد نکردی.\n\n' +
         'مثال:\n' +
         '<code>عباس عاقبتی 123456789</code>',
-    };
-  }
-
-  if (
-    displayName.length > 128
-  ) {
-    return {
-      ok: false,
-      error:
-        '❌ نام نمایشی بیش از حد طولانی است.\n\n' +
-        'حداکثر ۱۲۸ کاراکتر وارد کن.',
     };
   }
 
@@ -274,7 +302,6 @@ async function handleAdminRegistration(
     return true;
   }
 
-
   const target =
     await validateTelegramUser(
       parsed.telegramId,
@@ -292,14 +319,12 @@ async function handleAdminRegistration(
     return true;
   }
 
-
   const { existed } =
     await createAdmin(
       env.DB,
       parsed.telegramId,
       parsed.displayName,
     );
-
 
   const successText =
     existed
@@ -309,7 +334,6 @@ async function handleAdminRegistration(
       : `✅ <b>ادمین جدید ثبت شد</b>\n\n` +
         `👤 ${escapeHtml(parsed.displayName)}\n` +
         `🆔 <code>${parsed.telegramId}</code>`;
-
 
   const successMessage =
     await sendMessage(
@@ -321,13 +345,11 @@ async function handleAdminRegistration(
   const successMessageId =
     successMessage?.result?.message_id;
 
-
   await deleteSessionMessages(
     env,
     chatId,
     telegramId,
   );
-
 
   if (
     Number.isInteger(
