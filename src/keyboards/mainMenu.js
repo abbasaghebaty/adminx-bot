@@ -1,5 +1,5 @@
 export const MAIN_MENU_BUTTONS = Object.freeze({
-  TOP_ADMINS: '👑 ادمین‌های برتر',
+  TOP_ADMINS: '✨ ادمین‌های برتر',
   CHANNEL: '📢 کانال اصلی',
   ABOUT: '🏢 مجموعه AdminX',
   TRUST: '🛡 اعتماد به AdminX',
