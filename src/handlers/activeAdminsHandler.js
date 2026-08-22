@@ -38,9 +38,7 @@ function escapeHtml(value) {
 }
 
 
-function buildTopAdminsHtml(
-  data,
-) {
+function buildTopAdminsHtml(data) {
   if (!data.total) {
     return (
       '<b>✨ ادمین‌های برتر</b>\n\n' +
@@ -53,23 +51,16 @@ function buildTopAdminsHtml(
     '',
   ];
 
-  for (
-    const admin of data.admins
-  ) {
-    const telegramId =
-      String(
-        admin?.telegram_id ??
-          '',
-      ).trim();
+  for (const admin of data.admins) {
+    const telegramId = String(
+      admin?.telegram_id ?? '',
+    ).trim();
 
-    const displayName =
-      escapeHtml(
-        String(
-          admin?.display_name ??
-            'بدون نام',
-        ).trim() ||
-          'بدون نام',
-      );
+    const displayName = escapeHtml(
+      String(
+        admin?.display_name ?? 'بدون نام',
+      ).trim() || 'بدون نام',
+    );
 
     if (!telegramId) {
       lines.push(
@@ -93,18 +84,15 @@ export async function sendTopAdmins(
   env,
   page = 1,
 ) {
-  const data =
-    await listAdmins(
-      env.DB,
-      page,
-      10,
-    );
+  const data = await listAdmins(
+    env.DB,
+    page,
+    10,
+  );
 
   return sendMessage(
     chatId,
-    buildTopAdminsHtml(
-      data,
-    ),
+    buildTopAdminsHtml(data),
     env,
     {
       reply_markup:
@@ -132,10 +120,9 @@ export async function handleTopAdminsCallback(
     return false;
   }
 
-  const page =
-    Number(
-      callbackData.split(':')[1],
-    );
+  const page = Number(
+    callbackData.split(':')[1],
+  );
 
   if (
     !Number.isInteger(page) ||
@@ -145,10 +132,8 @@ export async function handleTopAdminsCallback(
       callbackQuery.id,
       env,
       {
-        text:
-          'صفحه نامعتبر است.',
-        show_alert:
-          true,
+        text: 'صفحه نامعتبر است.',
+        show_alert: true,
       },
     );
 
@@ -167,19 +152,16 @@ export async function handleTopAdminsCallback(
     return true;
   }
 
-  const result =
-    await listAdmins(
-      env.DB,
-      page,
-      10,
-    );
+  const result = await listAdmins(
+    env.DB,
+    page,
+    10,
+  );
 
   await editMessageText(
     message.chat.id,
     message.message_id,
-    buildTopAdminsHtml(
-      result,
-    ),
+    buildTopAdminsHtml(result),
     env,
     {
       reply_markup:
