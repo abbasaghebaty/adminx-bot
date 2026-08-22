@@ -213,7 +213,7 @@ export async function handleMessage(
             ],
             [
               {
-                text: '👑 مدیریت ارشد',
+                text: '✨ مدیریت ارشد',
                 url: LINKS.OWNER_ADMIN,
               },
             ],
