@@ -24,7 +24,7 @@ export function getMainMenuKeyboard() {
         },
         {
           text: MAIN_MENU_BUTTONS.TRUST,
-          style: 'success',
+          style: 'primary',
         },
         {
           text: MAIN_MENU_BUTTONS.ABOUT,
