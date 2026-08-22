@@ -1,7 +1,7 @@
 import {
   answerCallbackQuery,
   editMessageText,
-  sendRichMessage,
+  sendMessage,
 } from '../api/telegram.js';
 
 import {
@@ -38,25 +38,20 @@ function escapeHtml(value) {
 }
 
 
-function buildTopAdminsRichMessage(
+function buildTopAdminsHtml(
   data,
 ) {
   if (!data.total) {
-    return {
-      html:
-        '<b>👑 ادمین‌های برتر</b>\n\n' +
-        'فعلاً ادمینی ثبت نشده است.',
-
-      is_rtl: true,
-    };
+    return (
+      '<b>👑 ادمین‌های برتر</b>\n\n' +
+      'فعلاً ادمینی ثبت نشده است.'
+    );
   }
-
 
   const lines = [
     '<b>👑 ادمین‌های برتر</b>',
     '',
   ];
-
 
   for (
     const admin of data.admins
@@ -67,7 +62,6 @@ function buildTopAdminsRichMessage(
           '',
       ).trim();
 
-
     const displayName =
       escapeHtml(
         String(
@@ -77,7 +71,6 @@ function buildTopAdminsRichMessage(
           'بدون نام',
       );
 
-
     if (!telegramId) {
       lines.push(
         `🆔 ${displayName}`,
@@ -86,30 +79,12 @@ function buildTopAdminsRichMessage(
       continue;
     }
 
-
-    /*
-     * Telegram Bot API 10.1+
-     *
-     * Rich HTML:
-     * tg://user?id=...
-     * به‌عنوان inline mention
-     * رندر می‌شود.
-     *
-     * عمداً فقط خود نام داخل
-     * تگ <a> قرار گرفته است.
-     */
     lines.push(
       `🆔 <a href="tg://user?id=${telegramId}">${displayName}</a>`,
     );
   }
 
-
-  return {
-    html:
-      lines.join('\n'),
-
-    is_rtl: true,
-  };
+  return lines.join('\n');
 }
 
 
@@ -125,10 +100,9 @@ export async function sendTopAdmins(
       10,
     );
 
-
-  return sendRichMessage(
+  return sendMessage(
     chatId,
-    buildTopAdminsRichMessage(
+    buildTopAdminsHtml(
       data,
     ),
     env,
@@ -150,7 +124,6 @@ export async function handleTopAdminsCallback(
   const callbackData =
     callbackQuery.data ?? '';
 
-
   if (
     !callbackData.startsWith(
       'top_admins:',
@@ -159,12 +132,10 @@ export async function handleTopAdminsCallback(
     return false;
   }
 
-
   const page =
     Number(
       callbackData.split(':')[1],
     );
-
 
   if (
     !Number.isInteger(page) ||
@@ -184,10 +155,8 @@ export async function handleTopAdminsCallback(
     return true;
   }
 
-
   const message =
     callbackQuery.message;
-
 
   if (!message) {
     await answerCallbackQuery(
@@ -198,7 +167,6 @@ export async function handleTopAdminsCallback(
     return true;
   }
 
-
   const result =
     await listAdmins(
       env.DB,
@@ -206,18 +174,14 @@ export async function handleTopAdminsCallback(
       10,
     );
 
-
   await editMessageText(
     message.chat.id,
     message.message_id,
-    null,
+    buildTopAdminsHtml(
+      result,
+    ),
     env,
     {
-      rich_message:
-        buildTopAdminsRichMessage(
-          result,
-        ),
-
       reply_markup:
         getAdminsPaginationKeyboard(
           result.page,
@@ -226,12 +190,10 @@ export async function handleTopAdminsCallback(
     },
   );
 
-
   await answerCallbackQuery(
     callbackQuery.id,
     env,
   );
-
 
   return true;
 }
